@@ -1,16 +1,23 @@
 import { Message } from "../components/ChatInput";
+
 export const fetchResponse = async (chats: Message[]) => {
   try {
     const message = chats
       .map((chat) => chat.sender === "user" && chat.message)
       .join(" \n");
-    const response = await fetch("http://localhost:3080/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ message: message }),
-    });
+    const serverUrl = import.meta.env.VITE_SERVER_URL;
+    console.log("URL: ", serverUrl);
+
+    const response = await fetch(
+      serverUrl ?? "https://chatgpt2-0-wvv8.vercel.app/",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message: message }),
+      }
+    );
 
     const data = await response.json();
     console.log(data);
