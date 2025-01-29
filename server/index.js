@@ -23,12 +23,13 @@ app.listen("3080", () =>
 );
 
 app.get("/", (_, res) => {
-  console.log(process.env.OPENAI_API_KEY);
   res.send("Hello World");
 });
 
 app.post("/", async (req, res) => {
   const { message } = req.body;
+  console.log("Message Requested: ", message);
+
   try {
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -39,17 +40,12 @@ app.post("/", async (req, res) => {
           content: message,
         },
       ],
-      temperature: 0.5,
-      max_completion_tokens: 100,
     });
-    console.log(completion);
 
-    completion.then((result) => {
-      console.log(result.choices[0].message);
-      res.send(result.choices[0].message);
-    });
+    console.log(completion.choices[0].message);
+    res.status(200).json({ message: completion.choices[0].message.content });
   } catch (e) {
-    console.log(e);
+    console.log("error is here", e);
     res.send(e).status(400);
   }
 });
