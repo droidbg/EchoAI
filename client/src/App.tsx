@@ -32,7 +32,7 @@ function App() {
       </div>
 
       <div className="w-full max-w-4xl min-w-[20rem] self-center ">
-        <ChatInput sendMessage={sendMessage} />
+        <ChatInput sendMessage={sendMessage} isLoading={mutation.isLoading} />
       </div>
     </div>
   );

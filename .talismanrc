@@ -1,5 +1,5 @@
 fileignoreconfig:
 
-- filename: client/package-lock.json
-  checksum: ed39e4a3b53d70b90126d492298087788b354dcbfc5f4f7097c38558dd3393db
+- filename: client/src/components/ChatInput.tsx
+  checksum: 9295b15f283f1ec64518c5d465edce4f9038ff5d1f369e8d502357518fe1d527
   version: ""
