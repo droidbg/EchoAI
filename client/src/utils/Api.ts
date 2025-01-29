@@ -3,10 +3,10 @@ import { Message } from "../components/ChatInput";
 export const fetchResponse = async (chats: Message[]) => {
   try {
     const message = chats
-      .map((chat) => chat.sender === "user" && chat.message)
+      .map((chat) => (chat.sender === "user" ? chat.message : ""))
       .join(" \n");
     const serverUrl = import.meta.env.VITE_SERVER_URL;
-    console.log("URL: ", serverUrl);
+    console.log("message: ", message);
 
     const response = await fetch(
       serverUrl ?? "https://chatgpt2-0-wvv8.vercel.app/",

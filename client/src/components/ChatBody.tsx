@@ -29,6 +29,13 @@ const ChatBody: FC<{ chats: Message[] }> = (props) => {
           <AiChat key={index} message={chat.message} />
         );
       })}
+      {chats.length === 0 && (
+        <div>
+          <div className="text-3xl font-bold m-auto mt-40 text-center text-yellow-50">
+            What can I help with?
+          </div>
+        </div>
+      )}
       <div ref={bottomRef} className="h-3"></div>
     </div>
   );
