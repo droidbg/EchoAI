@@ -33,7 +33,7 @@ app.post("/", async (req, res) => {
   try {
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
-      store: true,
+
       messages: [
         {
           role: "user",
