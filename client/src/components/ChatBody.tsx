@@ -7,10 +7,19 @@ import autoAnimate from "@formkit/auto-animate";
 const ChatBody: FC<{ chats: Message[] }> = (props) => {
   const chats: Message[] = props.chats;
   const parent = useRef(null);
+  const bottomRef = useRef<HTMLDivElement | null>(null);
+
+  //for animation
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     parent.current && autoAnimate(parent.current);
   }, [parent]);
+
+  // for scrolling
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chats]);
+
   return (
     <div className="flex flex-col gap-4" ref={parent}>
       {chats.map((chat: Message, index) => {
@@ -20,6 +29,7 @@ const ChatBody: FC<{ chats: Message[] }> = (props) => {
           <AiChat key={index} message={chat.message} />
         );
       })}
+      <div ref={bottomRef} className="h-3"></div>
     </div>
   );
 };
