@@ -3,6 +3,7 @@ import ChatBody from "./components/ChatBody";
 import ChatInput, { Message } from "./components/ChatInput";
 import { fetchResponse } from "./utils/Api";
 import { useMutation } from "react-query";
+import { Analytics } from "@vercel/analytics/react";
 
 function App() {
   const [chats, setChats] = useState<Message[]>([]);
@@ -34,6 +35,7 @@ function App() {
       <div className="w-full max-w-4xl min-w-[20rem] self-center ">
         <ChatInput sendMessage={sendMessage} isLoading={mutation.isLoading} />
       </div>
+      <Analytics />
     </div>
   );
 }
