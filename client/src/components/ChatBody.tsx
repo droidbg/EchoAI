@@ -1,19 +1,20 @@
-const ChatBody = () => {
+import { FC } from "react";
+import { Message } from "./ChatInput";
+import UserChat from "./UserChat";
+import AiChat from "./AiChat";
+
+const ChatBody: FC<{ chats: Message[] }> = (props) => {
+  const chats: Message[] = props.chats;
+
   return (
     <div className="flex flex-col gap-4">
-      {/* Client Message */}
-      <div className="border-b-amber-100 border-2 break-words rounded-lg p-2  self-end max-w-[80%]">
-        <pre>
-          <span>Hey Chat GPT, Can you help me?</span>
-        </pre>
-      </div>
-
-      {/* AI MESSAGE */}
-      <div className="border-blue-300 border-2 overflow-ellipsis break-words rounded-lg p-2 bg-black self-start max-w-[80%]">
-        <pre>
-          <span>Yeah, I can help you anything</span>
-        </pre>
-      </div>
+      {chats.map((chat: Message, index) => {
+        return chat.sender === "user" ? (
+          <UserChat key={index} message={chat.message} />
+        ) : (
+          <AiChat key={index} message={chat.message} />
+        );
+      })}
     </div>
   );
 };
