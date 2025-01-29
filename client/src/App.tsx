@@ -6,6 +6,7 @@ import { useMutation } from "react-query";
 
 function App() {
   const [chats, setChats] = useState<Message[]>([]);
+
   const mutation = useMutation({
     mutationFn: () => {
       return fetchResponse(chats);
