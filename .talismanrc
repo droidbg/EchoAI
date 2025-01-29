@@ -1,5 +1,5 @@
 fileignoreconfig:
 
-- filename: server/index.js
-  checksum: 1f6de3a8d987c0d539322283ad37693b0271ff0c0c3eba4ccd602b7075b561a5
+- filename: client/package-lock.json
+  checksum: 458eeacb07307d4ec4caf8be966b24bffff957f29a2cc8f4d6a03f336c2eee3f
   version: ""
