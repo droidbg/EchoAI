@@ -6,7 +6,7 @@
 
 🚀 EchoAI is a React based intelligent conversations with OpenAI..
 
-Hosted **on [echoai.vercel.app](https://EchoAI.vercel.app),** this application brings a hassle-free way to chat with openAI.
+Hosted **on [echoai2.vercel.app](https://echoai2.vercel.app/),** this application brings a hassle-free way to chat with openAI.
 
 <img src="https://i.imgur.com/dBaSKWF.gif" height="20" width="100%">
 
