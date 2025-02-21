@@ -14,12 +14,8 @@ Hosted **on [echoai2.vercel.app](https://echoai2.vercel.app/),** this applicatio
 
 - [Example](#example)
 - [Features](#-features)
-
-- [Tech Stack](#-tech-stack)
-- [Live Demo](#-live-demo)
 - [Project Local Setup](#-project-local-setup)
-- [Contributing](#-contributing)
-- [License](#-license)
+- [Usage](#usage)
 
 <img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif"/>
 
