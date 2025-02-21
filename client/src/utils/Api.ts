@@ -20,9 +20,15 @@ export const fetchResponse = async (chats: Message[]) => {
     );
 
     const data = await response.json();
+    if (data.status == 401) {
+      data.message = "Something went wrong!!! \nPlease check after sometime...";
+    }
     console.log(data);
     return data;
   } catch (error) {
     console.log(error);
+    return {
+      message: "Something went wrong!!! \nPlease check after sometime...",
+    };
   }
 };

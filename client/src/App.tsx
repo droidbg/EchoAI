@@ -9,8 +9,8 @@ function App() {
   const [chats, setChats] = useState<Message[]>([]);
 
   const mutation = useMutation({
-    mutationFn: () => {
-      return fetchResponse(chats);
+    mutationFn: (messages: Message[]) => {
+      return fetchResponse(messages);
     },
     onSuccess: (data: { message: string }) =>
       setChats((prev) => [
@@ -21,7 +21,7 @@ function App() {
 
   const sendMessage = async (message: Message) => {
     await Promise.resolve(setChats((prev) => [...prev, message]));
-    mutation.mutate();
+    mutation.mutate([message]);
   };
 
   return (
