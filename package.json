@@ -1,0 +1,72 @@
+{
+  "name": "echoai",
+  "version": "1.0.0",
+  "description": "EchoAI - A modern, responsive AI chat interface built with React, TypeScript, and OpenAI",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "setup": "npm run install:all && npm run setup:env",
+    "install:all": "npm install && npm run install:client && npm run install:server",
+    "install:client": "cd client && npm install",
+    "install:server": "cd server && npm install",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:client": "cd client && npm run dev",
+    "dev:server": "cd server && npm run dev",
+    "start": "concurrently \"npm run start:server\" \"npm run start:client\"",
+    "start:client": "cd client && npm start",
+    "start:server": "cd server && npm start",
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "cd client && npm run build",
+    "build:server": "cd server && npm run build",
+    "lint": "npm run lint:client && npm run lint:server",
+    "lint:client": "cd client && npm run lint",
+    "lint:server": "cd server && npm run lint",
+    "format": "npm run format:client && npm run format:server",
+    "format:client": "cd client && npm run format",
+    "format:server": "cd server && npm run format",
+    "setup:env": "node scripts/setup-env.js",
+    "clean": "npm run clean:client && npm run clean:server",
+    "clean:client": "cd client && rm -rf node_modules dist",
+    "clean:server": "cd server && rm -rf node_modules",
+    "test": "npm run test:client && npm run test:server",
+    "test:client": "cd client && npm test",
+    "test:server": "cd server && npm test",
+    "screenshots": "node scripts/capture-screenshots.js",
+    "screenshots:help": "echo 'Make sure EchoAI is running on http://localhost:5173 before capturing screenshots'",
+    "screenshots:optimize": "node scripts/optimize-screenshots.js",
+    "screenshots:verify": "node scripts/verify-readme.js",
+    "screenshots:placeholders": "node scripts/create-placeholder-demos.js"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "puppeteer": "^24.25.0"
+  },
+  "keywords": [
+    "ai",
+    "chat",
+    "openai",
+    "react",
+    "typescript",
+    "tailwindcss",
+    "conversation",
+    "assistant",
+    "chatbot"
+  ],
+  "author": "EchoAI Contributors",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/droidbg/EchoAI.git"
+  },
+  "homepage": "https://github.com/droidbg/EchoAI#readme",
+  "bugs": {
+    "url": "https://github.com/droidbg/EchoAI/issues"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  }
+}

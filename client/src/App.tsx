@@ -215,6 +215,7 @@ function App() {
             {/* Settings Button */}
             <button
               onClick={() => setIsSettingsOpen(true)}
+              data-testid="settings-button"
               className={`p-2 rounded-full transition-all duration-300 ${
                 isDarkMode
                   ? 'bg-white/10 hover:bg-white/20 text-white'
@@ -246,6 +247,7 @@ function App() {
             {/* Dark Mode Toggle */}
             <button
               onClick={toggleDarkMode}
+              data-testid="dark-mode-toggle"
               className={`p-2 rounded-full transition-all duration-300 ${
                 isDarkMode
                   ? 'bg-white/10 hover:bg-white/20 text-white'

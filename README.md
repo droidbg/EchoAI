@@ -5,13 +5,129 @@
   
   **A modern, responsive AI chat interface built with React, TypeScript, and OpenAI**
   
-  [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-  [![Node.js Version](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen.svg)](https://nodejs.org/)
-  [![React](https://img.shields.io/badge/React-18.3.1-blue.svg)](https://reactjs.org/)
-  [![TypeScript](https://img.shields.io/badge/TypeScript-5.6.2-blue.svg)](https://www.typescriptlang.org/)
+  <br>
   
-  [Live Demo](https://echoai-demo.vercel.app) • [Documentation](#documentation) • [Contributing](CONTRIBUTING.md) • [Report Bug](https://github.com/your-username/echoai/issues)
+  <!-- Badges -->
+  <p align="center">
+    <a href="https://github.com/droidbg/EchoAI">
+      <img src="https://img.shields.io/github/stars/droidbg/EchoAI?style=for-the-badge&logo=github&color=yellow&labelColor=black" alt="GitHub stars">
+    </a>
+    <a href="https://github.com/droidbg/EchoAI/fork">
+      <img src="https://img.shields.io/github/forks/droidbg/EchoAI?style=for-the-badge&logo=github&color=blue&labelColor=black" alt="GitHub forks">
+    </a>
+    <a href="https://github.com/droidbg/EchoAI/issues">
+      <img src="https://img.shields.io/github/issues/droidbg/EchoAI?style=for-the-badge&logo=github&color=red&labelColor=black" alt="GitHub issues">
+    </a>
+    <a href="https://github.com/droidbg/EchoAI/blob/main/LICENSE">
+      <img src="https://img.shields.io/badge/License-Apache%202.0-blue?style=for-the-badge&logo=apache" alt="License">
+    </a>
+  </p>
+  
+  <p align="center">
+    <a href="https://nodejs.org/">
+      <img src="https://img.shields.io/badge/Node.js-18+-green?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js">
+    </a>
+    <a href="https://reactjs.org/">
+      <img src="https://img.shields.io/badge/React-18.3.1-blue?style=for-the-badge&logo=react&logoColor=white" alt="React">
+    </a>
+    <a href="https://www.typescriptlang.org/">
+      <img src="https://img.shields.io/badge/TypeScript-5.6.2-blue?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
+    </a>
+    <a href="https://tailwindcss.com/">
+      <img src="https://img.shields.io/badge/Tailwind%20CSS-4.0-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS">
+    </a>
+  </p>
+  
+  <p align="center">
+    <a href="https://echoai2.vercel.app">
+      <img src="https://img.shields.io/badge/🌐%20Live%20Demo-Visit%20Now-green?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Demo">
+    </a>
+    <a href="https://github.com/droidbg/EchoAI/discussions">
+      <img src="https://img.shields.io/badge/💬%20Discussions-Join%20Us-blue?style=for-the-badge&logo=github&logoColor=white" alt="Discussions">
+    </a>
+  </p>
+  
+  <br>
+  
+  <!-- Quick Links -->
+  <p align="center">
+    <a href="#-features">Features</a> •
+    <a href="#-quick-start">Quick Start</a> •
+    <a href="#-installation">Installation</a> •
+    <a href="#-deployment">Deployment</a> •
+    <a href="#-contributing">Contributing</a>
+  </p>
 </div>
+
+---
+
+## 📱 Demo
+
+<div align="center">
+  
+  ### 🖥️ Desktop View
+  <img src="./docs/demo-desktop.svg" alt="EchoAI Desktop Demo" width="800" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+  
+  <br><br>
+  
+  ### 📱 Mobile View
+  <img src="./docs/demo-mobile.svg" alt="EchoAI Mobile Demo" width="300" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+  
+  <br><br>
+  
+  ### 🎨 UI Screenshots
+  
+  <table>
+    <tr>
+      <td align="center">
+        <strong>Light Mode</strong><br>
+        <img src="./docs/screenshot-light.png" alt="Light Mode" width="400" style="border-radius: 8px;">
+      </td>
+      <td align="center">
+        <strong>Dark Mode</strong><br>
+        <img src="./docs/screenshot-dark.png" alt="Dark Mode" width="400" style="border-radius: 8px;">
+      </td>
+    </tr>
+    <tr>
+      <td align="center">
+        <strong>Settings Modal</strong><br>
+        <img src="./docs/screenshot-settings.png" alt="Settings" width="400" style="border-radius: 8px;">
+      </td>
+      <td align="center">
+        <strong>Error Handling</strong><br>
+        <img src="./docs/screenshot-error.png" alt="Error Handling" width="400" style="border-radius: 8px;">
+      </td>
+    </tr>
+  </table>
+  
+  <br>
+  
+  **[🚀 Try EchoAI Live](https://echoai2.vercel.app)** • **[📖 View Documentation](#-documentation)**
+  
+</div>
+
+---
+
+## 📊 Project Status
+
+<div align="center">
+
+| Status            | Description          |
+| ----------------- | -------------------- |
+| 🟢 **Stable**     | Production ready     |
+| 🟢 **Active**     | Regular updates      |
+| 🟢 **Maintained** | Bug fixes & features |
+| 🟢 **Documented** | Comprehensive docs   |
+
+</div>
+
+### 🎯 Current Version: `v1.0.0`
+
+- ✅ **Core Features**: Chat interface, API integration, error handling
+- ✅ **UI/UX**: Dark/light mode, responsive design, animations
+- ✅ **Security**: API key management, input validation
+- ✅ **Performance**: Optimized builds, lazy loading
+- 🔄 **Roadmap**: See [Issues](https://github.com/droidbg/EchoAI/issues) for upcoming features
 
 ---
 
@@ -56,25 +172,47 @@
 
 ## 📋 Table of Contents
 
-- [Quick Start](#quick-start)
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Usage](#usage)
-- [Architecture](#architecture)
-- [API Documentation](#api-documentation)
-- [Deployment](#deployment)
-- [Contributing](#contributing)
-- [License](#license)
+<details>
+<summary>Click to expand</summary>
+
+- [📱 Demo](#-demo)
+- [🌟 Features](#-features)
+- [🚀 Quick Start](#-quick-start)
+- [📦 Installation](#-installation)
+- [⚙️ Configuration](#️-configuration)
+- [💻 Usage](#-usage)
+- [🏗️ Architecture](#️-architecture)
+- [📚 API Documentation](#-api-documentation)
+- [🚀 Deployment](#-deployment)
+- [🤝 Contributing](#-contributing)
+- [📄 License](#-license)
+- [🙏 Acknowledgments](#-acknowledgments)
+- [📞 Support](#-support)
+
+</details>
 
 ---
 
 ## 🚀 Quick Start
 
-### Prerequisites
+> **⚡ Get up and running in under 5 minutes!**
 
-- **Node.js** (v16 or above) - [Download here](https://nodejs.org/)
-- **npm** or **yarn** package manager
-- **OpenAI API Key** - [Get yours here](https://platform.openai.com/account/api-keys)
+### 📋 Prerequisites
+
+| Requirement        | Version  | Download                                                |
+| ------------------ | -------- | ------------------------------------------------------- |
+| **Node.js**        | ≥ 16.0.0 | [Download](https://nodejs.org/)                         |
+| **npm**            | Latest   | Included with Node.js                                   |
+| **OpenAI API Key** | Any      | [Get Key](https://platform.openai.com/account/api-keys) |
+
+### ⚡ One-Command Setup
+
+```bash
+# Clone, install, and start EchoAI
+git clone https://github.com/droidbg/EchoAI.git && cd EchoAI && npm run setup
+```
+
+> **Note**: The `npm run setup` script will be added to automate the entire setup process.
 
 ### 1. Clone the Repository
 

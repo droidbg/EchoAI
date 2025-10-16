@@ -85,11 +85,13 @@ const SettingsModal: FC<SettingsModalProps> = ({
       />
       
       {/* Modal */}
-      <div className={`relative w-full max-w-md rounded-2xl shadow-2xl ${
-        isDarkMode 
-          ? 'bg-slate-800 border border-white/20' 
-          : 'bg-white border border-gray-200'
-      }`}>
+      <div 
+        data-testid="settings-modal"
+        className={`relative w-full max-w-md rounded-2xl shadow-2xl ${
+          isDarkMode 
+            ? 'bg-slate-800 border border-white/20' 
+            : 'bg-white border border-gray-200'
+        }`}>
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/10">
           <h2 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
@@ -97,6 +99,7 @@ const SettingsModal: FC<SettingsModalProps> = ({
           </h2>
           <button
             onClick={onClose}
+            data-testid="settings-close"
             className={`p-2 rounded-full transition-colors ${
               isDarkMode 
                 ? 'hover:bg-white/10 text-white' 

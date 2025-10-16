@@ -68,6 +68,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ sendMessage, isLoading, isDarkMod
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Type your message here..."
+            data-testid="chat-input"
             disabled={isLoading}
             className={`w-full resize-none border-0 bg-transparent outline-none text-sm leading-relaxed placeholder-opacity-60 ${
               isDarkMode 
