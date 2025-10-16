@@ -27,8 +27,6 @@ export const fetchResponse = async (chats: Message[]) => {
     return data;
   } catch (error) {
     console.log(error);
-    return {
-      message: "Something went wrong!!! \nPlease check after sometime...",
-    };
+    throw new Error("Failed to fetch response from server");
   }
 };
