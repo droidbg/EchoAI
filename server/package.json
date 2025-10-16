@@ -1,15 +1,35 @@
 {
-  "name": "server",
+  "name": "echoai-server",
   "version": "1.0.0",
   "main": "index.js",
-  "type":"module",
+  "type": "module",
+  "description": "EchoAI Server - Node.js backend for EchoAI chat application with OpenAI integration",
+  "keywords": [
+    "ai",
+    "chat",
+    "openai",
+    "nodejs",
+    "express",
+    "api",
+    "server",
+    "backend"
+  ],
+  "author": "EchoAI Contributors",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/droidbg/EchoAI.git"
+  },
+  "homepage": "https://github.com/droidbg/EchoAI#readme",
+  "bugs": {
+    "url": "https://github.com/droidbg/EchoAI/issues"
+  },
   "scripts": {
     "start": "nodemon index.js",
-    "test": "jest"
+    "test": "jest",
+    "dev": "nodemon index.js",
+    "prod": "node index.js"
   },
-  "author": "",
-  "license": "ISC",
-  "description": "",
   "dependencies": {
     "body-parser": "^1.20.3",
     "cors": "^2.8.5",

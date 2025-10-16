@@ -1,0 +1,154 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  client-lint:
+    name: Client Lint & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install client dependencies
+        run: |
+          cd client
+          npm ci
+
+      - name: Run ESLint
+        run: |
+          cd client
+          npm run lint
+
+      - name: Build client
+        run: |
+          cd client
+          npm run build
+
+      - name: Check build output
+        run: |
+          cd client
+          ls -la dist/
+
+  server-lint:
+    name: Server Lint & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install server dependencies
+        run: |
+          cd server
+          npm ci
+
+      - name: Run server tests
+        run: |
+          cd server
+          npm test
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install client dependencies
+        run: |
+          cd client
+          npm ci
+
+      - name: Install server dependencies
+        run: |
+          cd server
+          npm ci
+
+      - name: Run security audit (client)
+        run: |
+          cd client
+          npm audit --audit-level=moderate
+
+      - name: Run security audit (server)
+        run: |
+          cd server
+          npm audit --audit-level=moderate
+
+  dependency-check:
+    name: Dependency Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Check for outdated dependencies (client)
+        run: |
+          cd client
+          npm outdated || true
+
+      - name: Check for outdated dependencies (server)
+        run: |
+          cd server
+          npm outdated || true
+
+  code-quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: |
+          cd client
+          npm ci
+
+      - name: Check TypeScript compilation
+        run: |
+          cd client
+          npx tsc --noEmit
+
+      - name: Check for unused dependencies
+        run: |
+          cd client
+          npx depcheck || true

@@ -1,7 +1,24 @@
-// API Key Management Utility
-// Following industry best practices for client-side API key storage
+/**
+ * API Key Manager for EchoAI
+ *
+ * This utility provides secure storage and management of OpenAI API keys
+ * in the browser's local storage with basic obfuscation.
+ *
+ * Features:
+ * - Secure local storage with obfuscation
+ * - API key format validation
+ * - Live API key testing against OpenAI
+ * - Support for both legacy (sk-) and new (sk-proj-) key formats
+ *
+ * Security Note: This implementation uses simple base64 obfuscation for basic
+ * security. For production applications requiring higher security,
+ * consider implementing more robust encryption or server-side key management.
+ *
+ * @author EchoAI Contributors
+ * @license Apache-2.0
+ */
 
-const API_KEY_STORAGE_KEY = "echoai_user_api_key";
+const API_KEY_STORAGE_KEY = 'echoai_user_api_key';
 
 export class ApiKeyManager {
   /**
@@ -12,13 +29,11 @@ export class ApiKeyManager {
     try {
       // Basic obfuscation - not secure against determined attackers
       // but prevents casual inspection in dev tools
-      const obfuscated = btoa(apiKey + "_echoai");
+      const obfuscated = btoa(apiKey + '_echoai');
       localStorage.setItem(API_KEY_STORAGE_KEY, obfuscated);
     } catch (error) {
-      console.error("Failed to store API key:", error);
-      throw new Error(
-        "Failed to store API key. Please check your browser settings."
-      );
+      console.error('Failed to store API key:', error);
+      throw new Error('Failed to store API key. Please check your browser settings.');
     }
   }
 
@@ -32,9 +47,9 @@ export class ApiKeyManager {
 
       // Deobfuscate
       const deobfuscated = atob(obfuscated);
-      return deobfuscated.replace("_echoai", "");
+      return deobfuscated.replace('_echoai', '');
     } catch (error) {
-      console.error("Failed to retrieve API key:", error);
+      console.error('Failed to retrieve API key:', error);
       return null;
     }
   }
@@ -46,7 +61,7 @@ export class ApiKeyManager {
     try {
       localStorage.removeItem(API_KEY_STORAGE_KEY);
     } catch (error) {
-      console.error("Failed to clear API key:", error);
+      console.error('Failed to clear API key:', error);
     }
   }
 
@@ -65,10 +80,10 @@ export class ApiKeyManager {
     message: string;
   } {
     if (!apiKey || !apiKey.trim()) {
-      return { isValid: false, message: "API key cannot be empty" };
+      return { isValid: false, message: 'API key cannot be empty' };
     }
 
-    if (!apiKey.startsWith("sk-")) {
+    if (!apiKey.startsWith('sk-')) {
       return {
         isValid: false,
         message: 'OpenAI API keys should start with "sk-"',
@@ -76,11 +91,11 @@ export class ApiKeyManager {
     }
 
     if (apiKey.length < 10) {
-      return { isValid: false, message: "API key appears to be too short" };
+      return { isValid: false, message: 'API key appears to be too short' };
     }
 
     if (apiKey.length > 500) {
-      return { isValid: false, message: "API key appears to be too long" };
+      return { isValid: false, message: 'API key appears to be too long' };
     }
 
     // Basic format validation for OpenAI keys
@@ -88,38 +103,36 @@ export class ApiKeyManager {
     // Supports both sk- and sk-proj- formats
     const keyPattern = /^sk(-proj)?-[a-zA-Z0-9_-]+$/;
     if (!keyPattern.test(apiKey)) {
-      return { isValid: false, message: "API key format appears invalid" };
+      return { isValid: false, message: 'API key format appears invalid' };
     }
 
-    return { isValid: true, message: "API key format is valid" };
+    return { isValid: true, message: 'API key format is valid' };
   }
 
   /**
    * Test API key by making a simple request to OpenAI
    */
-  static async testApiKey(
-    apiKey: string
-  ): Promise<{ isValid: boolean; message: string }> {
+  static async testApiKey(apiKey: string): Promise<{ isValid: boolean; message: string }> {
     try {
-      const response = await fetch("https://api.openai.com/v1/models", {
-        method: "GET",
+      const response = await fetch('https://api.openai.com/v1/models', {
+        method: 'GET',
         headers: {
           Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
       });
 
       if (response.ok) {
-        return { isValid: true, message: "API key is valid and working" };
+        return { isValid: true, message: 'API key is valid and working' };
       } else if (response.status === 401) {
         return {
           isValid: false,
-          message: "Invalid API key. Please check your key and try again.",
+          message: 'Invalid API key. Please check your key and try again.',
         };
       } else if (response.status === 429) {
         return {
           isValid: false,
-          message: "API key rate limit exceeded. Please try again later.",
+          message: 'API key rate limit exceeded. Please try again later.',
         };
       } else {
         return {
@@ -128,10 +141,10 @@ export class ApiKeyManager {
         };
       }
     } catch (error) {
-      console.error("API key test failed:", error);
+      console.error('API key test failed:', error);
       return {
         isValid: false,
-        message: "Failed to test API key. Please check your connection.",
+        message: 'Failed to test API key. Please check your connection.',
       };
     }
   }
@@ -141,13 +154,13 @@ export class ApiKeyManager {
    */
   static getMaskedApiKey(): string {
     const apiKey = this.getApiKey();
-    if (!apiKey) return "";
+    if (!apiKey) return '';
 
-    if (apiKey.length <= 8) return "sk-****";
+    if (apiKey.length <= 8) return 'sk-****';
 
     const start = apiKey.substring(0, 6);
     const end = apiKey.substring(apiKey.length - 4);
-    const middle = "*".repeat(Math.min(apiKey.length - 10, 8));
+    const middle = '*'.repeat(Math.min(apiKey.length - 10, 8));
 
     return `${start}${middle}${end}`;
   }
@@ -155,15 +168,14 @@ export class ApiKeyManager {
 
 // Security warnings and best practices
 export const API_KEY_SECURITY_NOTES = {
-  WARNING:
-    "API keys are stored locally in your browser. Never share your API key with others.",
+  WARNING: 'API keys are stored locally in your browser. Never share your API key with others.',
   BEST_PRACTICES: [
-    "Keep your API key private and never share it",
-    "Monitor your OpenAI usage regularly",
-    "Set usage limits in your OpenAI account",
-    "Use environment variables in production applications",
-    "Consider using API key rotation for enhanced security",
+    'Keep your API key private and never share it',
+    'Monitor your OpenAI usage regularly',
+    'Set usage limits in your OpenAI account',
+    'Use environment variables in production applications',
+    'Consider using API key rotation for enhanced security',
   ],
   STORAGE_LIMITATION:
-    "This is client-side storage and not suitable for production applications with multiple users.",
+    'This is client-side storage and not suitable for production applications with multiple users.',
 };

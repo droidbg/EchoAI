@@ -1,13 +1,36 @@
 {
-  "name": "chatgpt2-0",
+  "name": "echoai",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "description": "EchoAI - A modern, responsive AI chat interface built with React, TypeScript, and OpenAI",
+  "keywords": [
+    "ai",
+    "chat",
+    "openai",
+    "react",
+    "typescript",
+    "tailwindcss",
+    "conversation",
+    "assistant"
+  ],
+  "author": "EchoAI Contributors",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/droidbg/EchoAI.git"
+  },
+  "homepage": "https://github.com/droidbg/EchoAI#readme",
+  "bugs": {
+    "url": "https://github.com/droidbg/EchoAI/issues"
+  },
   "scripts": {
     "start": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@formkit/auto-animate": "^0.8.2",

@@ -58,6 +58,7 @@ const SettingsModal: FC<SettingsModalProps> = ({
         setValidationMessage(testResult.message);
       }
     } catch (error) {
+      console.error('API key validation error:', error);
       setValidationMessage("Failed to validate API key. Please check your connection and try again.");
     } finally {
       setIsValidating(false);
