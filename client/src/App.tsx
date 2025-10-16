@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ChatBody from "./components/ChatBody";
 import ChatInput, { Message } from "./components/ChatInput";
+import SettingsModal from "./components/SettingsModal";
 import { fetchResponse } from "./utils/Api";
+import { ApiKeyManager } from "./utils/ApiKeyManager";
 import { useMutation } from "react-query";
 import { Analytics } from "@vercel/analytics/react";
 
@@ -10,6 +12,61 @@ function App() {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [suggestionPrompt, setSuggestionPrompt] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [userApiKey, setUserApiKey] = useState<string>("");
+  const [isRetrying, setIsRetrying] = useState(false);
+
+  // Load user API key on component mount
+  useEffect(() => {
+    const storedApiKey = ApiKeyManager.getApiKey();
+    setUserApiKey(storedApiKey || "");
+  }, []);
+
+  const handleApiKeyChange = (newApiKey: string) => {
+    if (newApiKey) {
+      ApiKeyManager.setApiKey(newApiKey);
+    } else {
+      ApiKeyManager.clearApiKey();
+    }
+    setUserApiKey(newApiKey);
+  };
+
+  const handleRetryMessage = async (errorId: string) => {
+    // Find the user message that corresponds to this error
+    const errorIndex = chats.findIndex(chat => chat.errorId === errorId);
+    if (errorIndex === -1) return;
+    
+    // Find the user message before this error
+    let userMessageIndex = -1;
+    for (let i = errorIndex - 1; i >= 0; i--) {
+      if (chats[i].sender === "user") {
+        userMessageIndex = i;
+        break;
+      }
+    }
+    
+    if (userMessageIndex === -1) return;
+    
+    const userMessage = chats[userMessageIndex];
+    
+    // Remove the error message
+    setChats(prev => prev.filter(chat => chat.errorId !== errorId));
+    
+    setIsRetrying(true);
+    setIsLoading(true);
+    
+    try {
+      mutation.mutate([userMessage]);
+    } catch (error) {
+      console.error('Retry failed:', error);
+    } finally {
+      setIsRetrying(false);
+    }
+  };
+
+  const handleUseOwnKey = () => {
+    setIsSettingsOpen(true);
+  };
 
   const mutation = useMutation({
     mutationFn: (messages: Message[]) => {
@@ -22,11 +79,19 @@ function App() {
       ]);
       setIsLoading(false);
     },
-    onError: (error) => {
+    onError: (error: unknown) => {
       console.error('Error fetching response:', error);
+      const errorMessage = error instanceof Error ? error.message : "Something went wrong. Please try again.";
+      const errorId = `error_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
       setChats((prev) => [
         ...prev,
-        { sender: "ai", message: "Sorry, I encountered an error. Please try again." },
+        { 
+          sender: "ai", 
+          message: errorMessage,
+          isError: true,
+          errorId: errorId
+        },
       ]);
       setIsLoading(false);
     },
@@ -89,6 +154,37 @@ function App() {
           </div>
           
           <div className="flex items-center space-x-2 sm:space-x-4">
+            {/* API Key Status Indicator */}
+            {userApiKey && (
+              <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                isDarkMode 
+                  ? 'bg-green-900/20 text-green-300 border border-green-500/20' 
+                  : 'bg-green-50 text-green-700 border border-green-200'
+              }`}>
+                <div className="flex items-center space-x-1">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <span>Your Key</span>
+                </div>
+              </div>
+            )}
+            
+            {/* Settings Button */}
+            <button
+              onClick={() => setIsSettingsOpen(true)}
+              className={`p-2 rounded-full transition-all duration-300 ${
+                isDarkMode 
+                  ? 'bg-white/10 hover:bg-white/20 text-white' 
+                  : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+              }`}
+              title="API Settings"
+            >
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </button>
+            
+            {/* Dark Mode Toggle */}
             <button
               onClick={toggleDarkMode}
               className={`p-2 rounded-full transition-all duration-300 ${
@@ -96,6 +192,7 @@ function App() {
                   ? 'bg-white/10 hover:bg-white/20 text-white' 
                   : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
               }`}
+              title="Toggle Theme"
             >
               {isDarkMode ? (
                 <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -114,7 +211,15 @@ function App() {
         <main className="flex-1 flex flex-col max-w-4xl mx-auto w-full px-2 sm:px-4 py-4 sm:py-6">
           <div className="flex-1 overflow-hidden rounded-xl sm:rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 shadow-2xl">
             <div className="h-full overflow-auto p-3 sm:p-6">
-              <ChatBody chats={chats} isDarkMode={isDarkMode} isLoading={isLoading} onSuggestionClick={handleSuggestionClick} />
+              <ChatBody 
+                chats={chats} 
+                isDarkMode={isDarkMode} 
+                isLoading={isLoading} 
+                onSuggestionClick={handleSuggestionClick}
+                onRetryMessage={handleRetryMessage}
+                onUseOwnKey={handleUseOwnKey}
+                isRetrying={isRetrying}
+              />
             </div>
           </div>
 
@@ -130,6 +235,16 @@ function App() {
           </div>
         </main>
       </div>
+      
+      {/* Settings Modal */}
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        isDarkMode={isDarkMode}
+        onApiKeyChange={handleApiKeyChange}
+        currentApiKey={userApiKey}
+      />
+      
       <Analytics />
     </div>
   );

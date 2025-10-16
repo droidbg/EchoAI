@@ -10,9 +10,20 @@ interface ChatBodyProps {
   isDarkMode: boolean;
   isLoading?: boolean;
   onSuggestionClick?: (suggestion: string) => void;
+  onRetryMessage?: (errorId: string) => void;
+  onUseOwnKey?: () => void;
+  isRetrying?: boolean;
 }
 
-const ChatBody: FC<ChatBodyProps> = ({ chats, isDarkMode, isLoading = false, onSuggestionClick }) => {
+const ChatBody: FC<ChatBodyProps> = ({ 
+  chats, 
+  isDarkMode, 
+  isLoading = false, 
+  onSuggestionClick, 
+  onRetryMessage, 
+  onUseOwnKey, 
+  isRetrying = false 
+}) => {
   const parent = useRef(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
@@ -33,7 +44,15 @@ const ChatBody: FC<ChatBodyProps> = ({ chats, isDarkMode, isLoading = false, onS
         return chat.sender === "user" ? (
           <UserChat key={index} message={chat.message} isDarkMode={isDarkMode} />
         ) : (
-          <AiChat key={index} message={chat.message} isDarkMode={isDarkMode} />
+          <AiChat 
+            key={index} 
+            message={chat.message} 
+            isDarkMode={isDarkMode}
+            isError={chat.isError}
+            onRetry={chat.isError && chat.errorId ? () => onRetryMessage?.(chat.errorId!) : undefined}
+            onUseOwnKey={chat.isError ? onUseOwnKey : undefined}
+            isRetrying={chat.isError && isRetrying}
+          />
         );
       })}
       

@@ -3,6 +3,8 @@ import { useState, useRef, useEffect } from "react";
 export type Message = {
   sender: string;
   message: string;
+  isError?: boolean;
+  errorId?: string; // Unique identifier for error messages to handle retries
 };
 
 interface ChatInputProps {
