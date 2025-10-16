@@ -66,12 +66,12 @@
 <div align="center">
   
   ### 🖥️ Desktop View
-  <img src="./docs/demo-desktop.svg" alt="EchoAI Desktop Demo" width="800" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+  <img src="./docs/demo-desktop.gif" alt="EchoAI Desktop Demo" width="800" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
   
   <br><br>
   
   ### 📱 Mobile View
-  <img src="./docs/demo-mobile.svg" alt="EchoAI Mobile Demo" width="300" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+  <img src="./docs/demo-mobile.gif" alt="EchoAI Mobile Demo" width="300" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
   
   <br><br>
   

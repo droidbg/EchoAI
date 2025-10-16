@@ -38,10 +38,12 @@
     "screenshots:help": "echo 'Make sure EchoAI is running on http://localhost:5173 before capturing screenshots'",
     "screenshots:optimize": "node scripts/optimize-screenshots.js",
     "screenshots:verify": "node scripts/verify-readme.js",
-    "screenshots:placeholders": "node scripts/create-placeholder-demos.js"
+    "screenshots:gifs": "node scripts/create-real-gif.js"
   },
   "devDependencies": {
+    "canvas": "^3.2.0",
     "concurrently": "^8.2.2",
+    "gif-encoder-2": "^1.0.5",
     "puppeteer": "^24.25.0"
   },
   "keywords": [
