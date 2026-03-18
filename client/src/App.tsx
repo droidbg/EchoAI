@@ -1,9 +1,9 @@
 /**
  * EchoAI Main Application Component
- * 
+ *
  * This is the main React component that orchestrates the entire EchoAI application.
  * It manages chat state, API key management, theme switching, and error handling.
- * 
+ *
  * Features:
  * - Chat message management and display
  * - Dark/light mode theme switching
@@ -11,28 +11,64 @@
  * - Error handling with retry mechanisms
  * - Suggestion prompts for common use cases
  * - Responsive design for all devices
- * 
+ *
  * @author EchoAI Contributors
  * @license Apache-2.0
  */
 
-import { useState, useEffect } from 'react';
+import { Analytics } from '@vercel/analytics/react';
+import { useEffect, useReducer, useRef, useState } from 'react';
+import { useMutation } from 'react-query';
 import ChatBody from './components/ChatBody';
-import ChatInput, { Message } from './components/ChatInput';
+import ChatInput, { ChatInputRef, Message } from './components/ChatInput';
+import Header from './components/Header';
 import SettingsModal from './components/SettingsModal';
 import { fetchResponse } from './utils/Api';
 import { ApiKeyManager } from './utils/ApiKeyManager';
-import { useMutation } from 'react-query';
-import { Analytics } from '@vercel/analytics/react';
+
+type AppState = {
+  chats: Message[];
+  isLoading: boolean;
+  isRetrying: boolean;
+};
+
+type AppAction =
+  | { type: 'ADD_MESSAGE'; message: Message }
+  | { type: 'REMOVE_ERROR_MESSAGE'; errorId: string }
+  | { type: 'SET_LOADING'; isLoading: boolean }
+  | { type: 'SET_RETRYING'; isRetrying: boolean }
+  | { type: 'SET_CHATS'; chats: Message[] };
+
+function appReducer(state: AppState, action: AppAction): AppState {
+  switch (action.type) {
+    case 'ADD_MESSAGE':
+      return { ...state, chats: [...state.chats, action.message] };
+    case 'REMOVE_ERROR_MESSAGE':
+      return { ...state, chats: state.chats.filter(c => c.errorId !== action.errorId) };
+    case 'SET_LOADING':
+      return { ...state, isLoading: action.isLoading };
+    case 'SET_RETRYING':
+      return { ...state, isRetrying: action.isRetrying };
+    case 'SET_CHATS':
+      return { ...state, chats: action.chats };
+    default:
+      return state;
+  }
+}
 
 function App() {
-  const [chats, setChats] = useState<Message[]>([]);
+  const [state, dispatch] = useReducer(appReducer, {
+    chats: [],
+    isLoading: false,
+    isRetrying: false,
+  });
   const [isDarkMode, setIsDarkMode] = useState(true);
-  const [suggestionPrompt, setSuggestionPrompt] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [userApiKey, setUserApiKey] = useState<string>('');
-  const [isRetrying, setIsRetrying] = useState(false);
+
+  const chatInputRef = useRef<ChatInputRef>(null);
+
+  const { chats, isLoading, isRetrying } = state;
 
   // Load user API key on component mount
   useEffect(() => {
@@ -68,17 +104,17 @@ function App() {
     const userMessage = chats[userMessageIndex];
 
     // Remove the error message
-    setChats(prev => prev.filter(chat => chat.errorId !== errorId));
+    dispatch({ type: 'REMOVE_ERROR_MESSAGE', errorId });
 
-    setIsRetrying(true);
-    setIsLoading(true);
+    dispatch({ type: 'SET_RETRYING', isRetrying: true });
+    dispatch({ type: 'SET_LOADING', isLoading: true });
 
     try {
       mutation.mutate([userMessage]);
     } catch (error) {
       console.error('Retry failed:', error);
     } finally {
-      setIsRetrying(false);
+      dispatch({ type: 'SET_RETRYING', isRetrying: false });
     }
   };
 
@@ -91,8 +127,15 @@ function App() {
       return fetchResponse(messages);
     },
     onSuccess: (data: { message: string }) => {
-      setChats(prev => [...prev, { sender: 'ai', message: data.message.replace(/^\n\n/, '') }]);
-      setIsLoading(false);
+      dispatch({
+        type: 'ADD_MESSAGE',
+        message: {
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+          sender: 'ai',
+          message: data.message.replace(/^\n\n/, ''),
+        },
+      });
+      dispatch({ type: 'SET_LOADING', isLoading: false });
     },
     onError: (error: unknown) => {
       console.error('Error fetching response:', error);
@@ -100,26 +143,27 @@ function App() {
         error instanceof Error ? error.message : 'Something went wrong. Please try again.';
       const errorId = `error_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-      setChats(prev => [
-        ...prev,
-        {
+      dispatch({
+        type: 'ADD_MESSAGE',
+        message: {
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
           sender: 'ai',
           message: errorMessage,
           isError: true,
           errorId: errorId,
         },
-      ]);
-      setIsLoading(false);
+      });
+      dispatch({ type: 'SET_LOADING', isLoading: false });
     },
     onSettled: () => {
       // This runs after both success and error
-      setIsLoading(false);
+      dispatch({ type: 'SET_LOADING', isLoading: false });
     },
   });
 
   const sendMessage = async (message: Message) => {
-    await Promise.resolve(setChats(prev => [...prev, message]));
-    setIsLoading(true);
+    dispatch({ type: 'ADD_MESSAGE', message });
+    dispatch({ type: 'SET_LOADING', isLoading: true });
     mutation.mutate([message]);
   };
 
@@ -137,7 +181,7 @@ function App() {
     };
 
     const prompt = promptMap[suggestion] || suggestion;
-    setSuggestionPrompt(prompt);
+    chatInputRef.current?.setSuggestion(prompt);
   };
 
   const toggleDarkMode = () => {
@@ -166,127 +210,12 @@ function App() {
       </div>
 
       <div className='relative z-10 flex flex-col min-h-screen' style={{ minHeight: '100vh' }}>
-        {/* Header */}
-        <header className='flex items-center justify-between p-4 sm:p-6 border-b border-white/10 backdrop-blur-sm'>
-          <div className='flex items-center space-x-3 sm:space-x-4'>
-            <div className='relative'>
-              <img
-                src='/logo.webp'
-                className='h-10 w-10 sm:h-12 sm:w-12 rounded-full shadow-lg'
-                alt='EchoAI Logo'
-              />
-              <div className='absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-green-400 rounded-full animate-pulse'></div>
-            </div>
-            <div>
-              <h1
-                className={`text-xl sm:text-2xl font-bold ${
-                  isDarkMode ? 'text-white' : 'text-gray-800'
-                }`}
-              >
-                EchoAI
-              </h1>
-              <p
-                className={`text-xs sm:text-sm ${
-                  isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                } hidden sm:block`}
-              >
-                Your intelligent AI assistant
-              </p>
-            </div>
-          </div>
-
-          <div className='flex items-center space-x-2 sm:space-x-4'>
-            {/* API Key Status Indicator */}
-            {userApiKey && (
-              <div
-                className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  isDarkMode
-                    ? 'bg-green-900/20 text-green-300 border border-green-500/20'
-                    : 'bg-green-50 text-green-700 border border-green-200'
-                }`}
-              >
-                <div className='flex items-center space-x-1'>
-                  <div className='w-2 h-2 bg-green-400 rounded-full animate-pulse'></div>
-                  <span>Your Key</span>
-                </div>
-              </div>
-            )}
-
-            {/* Settings Button */}
-            <button
-              onClick={() => setIsSettingsOpen(true)}
-              data-testid="settings-button"
-              className={`p-2 rounded-full transition-all duration-300 ${
-                isDarkMode
-                  ? 'bg-white/10 hover:bg-white/20 text-white'
-                  : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-              }`}
-              title='API Settings'
-            >
-              <svg
-                className='w-4 h-4 sm:w-5 sm:h-5'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth={2}
-                  d='M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z'
-                />
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth={2}
-                  d='M15 12a3 3 0 11-6 0 3 3 0 016 0z'
-                />
-              </svg>
-            </button>
-
-            {/* Dark Mode Toggle */}
-            <button
-              onClick={toggleDarkMode}
-              data-testid="dark-mode-toggle"
-              className={`p-2 rounded-full transition-all duration-300 ${
-                isDarkMode
-                  ? 'bg-white/10 hover:bg-white/20 text-white'
-                  : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-              }`}
-              title='Toggle Theme'
-            >
-              {isDarkMode ? (
-                <svg
-                  className='w-4 h-4 sm:w-5 sm:h-5'
-                  fill='none'
-                  stroke='currentColor'
-                  viewBox='0 0 24 24'
-                >
-                  <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth={2}
-                    d='M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z'
-                  />
-                </svg>
-              ) : (
-                <svg
-                  className='w-4 h-4 sm:w-5 sm:h-5'
-                  fill='none'
-                  stroke='currentColor'
-                  viewBox='0 0 24 24'
-                >
-                  <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth={2}
-                    d='M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z'
-                  />
-                </svg>
-              )}
-            </button>
-          </div>
-        </header>
+        <Header
+          isDarkMode={isDarkMode}
+          toggleDarkMode={toggleDarkMode}
+          userApiKey={userApiKey}
+          onOpenSettings={() => setIsSettingsOpen(true)}
+        />
 
         {/* Main Chat Area */}
         <main className='flex-1 flex flex-col max-w-4xl mx-auto w-full px-2 sm:px-4 py-4 sm:py-6'>
@@ -307,24 +236,24 @@ function App() {
           {/* Chat Input */}
           <div className='mt-4 sm:mt-6'>
             <ChatInput
+              ref={chatInputRef}
               sendMessage={sendMessage}
               isLoading={isLoading}
               isDarkMode={isDarkMode}
-              suggestionPrompt={suggestionPrompt}
-              onSuggestionPromptUsed={() => setSuggestionPrompt('')}
             />
           </div>
         </main>
       </div>
 
       {/* Settings Modal */}
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        isDarkMode={isDarkMode}
-        onApiKeyChange={handleApiKeyChange}
-        currentApiKey={userApiKey}
-      />
+      {isSettingsOpen && (
+        <SettingsModal
+          onClose={() => setIsSettingsOpen(false)}
+          isDarkMode={isDarkMode}
+          onApiKeyChange={handleApiKeyChange}
+          currentApiKey={userApiKey}
+        />
+      )}
 
       <Analytics />
     </div>
