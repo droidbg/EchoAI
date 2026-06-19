@@ -3,7 +3,7 @@
   
   # EchoAI
   
-  **A modern, responsive AI chat workspace built with React, TypeScript, and OpenAI**
+  **A modern, responsive AI chat workspace built with React, TypeScript, and Google Gemini**
   
   <br>
   
@@ -125,7 +125,7 @@
 
 - ✅ **Workspace UI**: Sidebar with saved chat history, "New Chat", and an editable profile
 - ✅ **Design**: "Midnight Indigo" dark theme + premium light theme, with a signature animated AI orb
-- ✅ **AI Chat**: OpenAI integration, suggestion grid, retry & error recovery
+- ✅ **AI Chat**: Google Gemini integration, suggestion grid, retry & error recovery
 - ✅ **Security**: Session-scoped API key storage, input validation
 - 🔄 **Roadmap**: See [Issues](https://github.com/droidbg/EchoAI/issues) for upcoming features
 
@@ -143,7 +143,7 @@
 
 ### 🤖 **AI-Powered Conversations**
 
-- **OpenAI Integration**: Powered by GPT-4 for intelligent, contextual responses
+- **Gemini Integration**: Powered by Google Gemini 2.5 Flash for intelligent, contextual responses
 - **Smart Suggestions**: Pre-built prompts for common use cases
 - **Context Awareness**: Maintains conversation context throughout the chat
 - **Error Recovery**: Intelligent retry mechanisms with fallback options
@@ -156,7 +156,7 @@
 
 ### 🔐 **Flexible API Key Management**
 
-- **User API Keys**: Use your own OpenAI API key for personal use
+- **User API Keys**: Use your own Google Gemini API key for personal use
 - **Server Fallback**: Built-in server with default API key for easy setup
 - **Session Storage**: Your API key is kept only for the current browser session and never sent to our servers
 - **Key Validation**: Real-time API key testing and validation
@@ -210,7 +210,7 @@
 | ------------------ | -------- | ------------------------------------------------------- |
 | **Node.js**        | ≥ 20.0.0 | [Download](https://nodejs.org/)                         |
 | **npm**            | Latest   | Included with Node.js                                   |
-| **OpenAI API Key** | Any      | [Get Key](https://platform.openai.com/account/api-keys) |
+| **Gemini API Key** | Any      | [Get Key](https://aistudio.google.com/apikey)           |
 
 ### ⚡ One-Command Setup
 
@@ -259,7 +259,7 @@ VITE_SERVER_URL=http://localhost:3080/
 **`server/.env`:**
 
 ```env
-OPENAI_API_KEY=sk-your-openai-api-key-here
+GEMINI_API_KEY=AIza-your-gemini-api-key-here
 ```
 
 ### 4. Start the Application
@@ -355,7 +355,7 @@ npm start
 
 | Variable         | Description         | Default       | Required        |
 | ---------------- | ------------------- | ------------- | --------------- |
-| `OPENAI_API_KEY` | Your OpenAI API key | -             | Yes             |
+| `GEMINI_API_KEY` | Your Gemini API key | -             | Yes             |
 | `PORT`           | Server port         | `3080`        | No              |
 | `NODE_ENV`       | Environment mode    | `development` | No              |
 | `CLIENT_URL`     | Client URL for CORS | -             | No (production) |
@@ -364,15 +364,15 @@ npm start
 
 #### Using Your Own API Key (Recommended)
 
-1. **Get an OpenAI API Key**:
+1. **Get a Gemini API Key**:
 
-   - Visit [OpenAI Platform](https://platform.openai.com/account/api-keys)
+   - Visit [Google AI Studio](https://aistudio.google.com/apikey)
    - Create a new API key
-   - Copy the key (starts with `sk-` or `sk-proj-`)
+   - Copy the key (starts with `AIza`)
 
 2. **Add to EchoAI**:
    - Click the settings gear icon in the top-right corner
-   - Paste your API key in the "Your OpenAI API Key" field
+   - Paste your API key in the "Gemini API Key" field
    - Click "Save Key"
    - The system will test your key automatically
 
@@ -382,7 +382,7 @@ npm start
 
    ```bash
    # In server/.env
-   OPENAI_API_KEY=sk-your-openai-api-key-here
+   GEMINI_API_KEY=AIza-your-gemini-api-key-here
    ```
 
 2. **Restart the Server**:
@@ -484,7 +484,7 @@ server/
 
 - **Node.js** - JavaScript runtime
 - **Express** - Web application framework
-- **OpenAI SDK** - Official OpenAI API client
+- **Google GenAI SDK** - Official `@google/genai` client for Gemini
 - **CORS** - Cross-origin resource sharing
 - **dotenv** - Environment variable management
 
@@ -529,11 +529,11 @@ Content-Type: application/json
 {
   "message": "Hello! I'm doing well, thank you for asking. How can I help you today?",
   "usage": {
-    "prompt_tokens": 10,
-    "completion_tokens": 20,
-    "total_tokens": 30
+    "promptTokenCount": 10,
+    "candidatesTokenCount": 20,
+    "totalTokenCount": 30
   },
-  "model": "gpt-4o-mini"
+  "model": "gemini-2.5-flash"
 }
 ```
 
@@ -542,8 +542,8 @@ Content-Type: application/json
 | Status | Error                 | Description                |
 | ------ | --------------------- | -------------------------- |
 | 400    | Invalid request       | Missing or invalid message |
-| 401    | Invalid API key       | OpenAI API key is invalid  |
-| 402    | Insufficient quota    | OpenAI API quota exceeded  |
+| 401    | Invalid API key       | Gemini API key is invalid  |
+| 402    | Insufficient quota    | Gemini API quota exceeded  |
 | 429    | Rate limit exceeded   | Too many requests          |
 | 500    | Internal server error | Server-side error          |
 
@@ -601,7 +601,7 @@ cd server
 vercel
 
 # Add environment variables in Vercel dashboard
-# OPENAI_API_KEY=your-key-here
+# GEMINI_API_KEY=your-key-here
 ```
 
 ### Option 2: Railway
@@ -650,7 +650,7 @@ pm2 save
 
 ```bash
 # Server
-OPENAI_API_KEY=sk-your-production-key
+GEMINI_API_KEY=AIza-your-production-key
 NODE_ENV=production
 PORT=3080
 CLIENT_URL=https://your-client-domain.com
@@ -704,7 +704,7 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 ## 🙏 Acknowledgments
 
-- **OpenAI** for providing the amazing GPT models
+- **Google** for the Gemini models and the GenAI SDK
 - **React Team** for the excellent framework
 - **Vercel** for the deployment platform
 - **All Contributors** who help make EchoAI better

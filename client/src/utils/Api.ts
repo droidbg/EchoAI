@@ -2,20 +2,24 @@
  * API Utility for EchoAI
  *
  * This module handles all API communications for the EchoAI application,
- * including both server-side and direct OpenAI API calls.
+ * including both server-side calls and direct Google Gemini API calls.
  *
  * Features:
  * - Automatic fallback between user API key and server API key
  * - Comprehensive error handling with user-friendly messages
- * - Support for both server and direct OpenAI API calls
- * - Request/response logging and debugging
+ * - Support for both the server proxy and direct Gemini calls
  *
  * @author EchoAI Contributors
  * @license Apache-2.0
  */
 
+import { GoogleGenAI } from '@google/genai';
 import { Message } from '../components/ChatInput';
 import { ApiKeyManager } from './ApiKeyManager';
+
+const MODEL = 'gemini-2.5-flash';
+const SYSTEM_INSTRUCTION =
+  'You are EchoAI, a helpful AI assistant. Provide clear, concise, and helpful responses.';
 
 export const fetchResponse = async (chats: Message[]) => {
   try {
@@ -25,10 +29,10 @@ export const fetchResponse = async (chats: Message[]) => {
     const userApiKey = ApiKeyManager.getApiKey();
 
     if (userApiKey) {
-      // Use user's API key directly with OpenAI
+      // Use the user's Gemini API key directly
       return await fetchWithUserApiKey(message, userApiKey);
     } else {
-      // Use server API key
+      // Use the server's API key
       return await fetchWithServerApi(message);
     }
   } catch (error) {
@@ -44,58 +48,43 @@ export const fetchResponse = async (chats: Message[]) => {
   }
 };
 
-// Fetch response using user's API key directly with OpenAI
+// Fetch response using the user's Gemini API key directly via the GenAI SDK
 const fetchWithUserApiKey = async (message: string, apiKey: string) => {
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
-        messages: [
-          {
-            role: 'system',
-            content:
-              'You are a helpful AI assistant. Provide clear, concise, and helpful responses.',
-          },
-          {
-            role: 'user',
-            content: message,
-          },
-        ],
-        max_tokens: 1000,
+    const ai = new GoogleGenAI({ apiKey });
+
+    const response = await ai.models.generateContent({
+      model: MODEL,
+      contents: message,
+      config: {
+        systemInstruction: SYSTEM_INSTRUCTION,
+        maxOutputTokens: 1000,
         temperature: 0.7,
-      }),
+      },
     });
 
-    if (!response.ok) {
-      if (response.status === 401) {
-        throw new Error('Invalid API key. Please check your API key in settings.');
-      } else if (response.status === 429) {
-        throw new Error('Rate limit exceeded. Please try again later.');
-      } else if (response.status === 402) {
-        throw new Error('Insufficient credits. Please add credits to your OpenAI account.');
-      } else {
-        throw new Error(`API request failed with status ${response.status}`);
-      }
+    const text = response.text;
+    if (!text) {
+      throw new Error('Invalid response format from Gemini API');
     }
-
-    const data = await response.json();
-
-    if (data.choices && data.choices[0] && data.choices[0].message) {
-      return {
-        message: data.choices[0].message.content,
-        usage: data.usage, // Include usage info for transparency
-      };
-    } else {
-      throw new Error('Invalid response format from OpenAI API');
-    }
+    return { message: text };
   } catch (error) {
-    console.error('User API key request failed:', error);
-    throw error;
+    const status = (error as { status?: number })?.status;
+    const reason = `${(error as Error)?.message ?? ''}`.toLowerCase();
+
+    if (status === 400 || status === 401 || status === 403 || reason.includes('api key')) {
+      throw new Error('Invalid API key. Please check your API key in settings.');
+    }
+    if (
+      status === 429 ||
+      reason.includes('quota') ||
+      reason.includes('resource_exhausted') ||
+      reason.includes('rate limit')
+    ) {
+      throw new Error('Rate limit or quota exceeded. Please try again later.');
+    }
+    if (error instanceof Error) throw error;
+    throw new Error('Failed to reach Gemini. Please try again or check your API key.');
   }
 };
 

@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "name": "openAI-server",
+  "name": "echoai-server",
   "builds": [{ "src": "index.js", "use": "@vercel/node" }],
   "routes": [
     {

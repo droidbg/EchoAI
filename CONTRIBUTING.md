@@ -57,7 +57,7 @@ This project adheres to a code of conduct. By participating, you are expected to
 
    - Copy `client/.env.example` to `client/.env`
    - Copy `server/.env.example` to `server/.env`
-   - Add your OpenAI API key to `server/.env`
+   - Add your Gemini API key to `server/.env`
 
 4. **Start development servers**:
 

@@ -1,7 +1,7 @@
 {
   "name": "echoai",
   "version": "1.0.0",
-  "description": "EchoAI - A modern, responsive AI chat interface built with React, TypeScript, and OpenAI",
+  "description": "EchoAI - A modern, responsive AI chat interface built with React, TypeScript, and Google Gemini",
   "private": true,
   "scripts": {
     "setup": "npm run install:all && npm run setup:env",
@@ -45,7 +45,7 @@
   "keywords": [
     "ai",
     "chat",
-    "openai",
+    "gemini",
     "react",
     "typescript",
     "tailwindcss",

@@ -59,22 +59,22 @@ async function setupEnvironment() {
     console.log('❌ Server .env.example not found');
   }
 
-  // Ask for OpenAI API key
-  console.log('\n🔑 OpenAI API Key Setup');
-  console.log('You can add your OpenAI API key now or later in the app settings.');
-  const addApiKey = await question('Do you want to add your OpenAI API key now? (y/N): ');
-  
+  // Ask for Gemini API key
+  console.log('\n🔑 Gemini API Key Setup');
+  console.log('You can add your Google Gemini API key now or later in the app settings.');
+  const addApiKey = await question('Do you want to add your Gemini API key now? (y/N): ');
+
   if (addApiKey.toLowerCase() === 'y' || addApiKey.toLowerCase() === 'yes') {
-    const apiKey = await question('Enter your OpenAI API key (starts with sk-): ');
-    if (apiKey && apiKey.startsWith('sk-')) {
+    const apiKey = await question('Enter your Gemini API key (starts with AIza): ');
+    if (apiKey && apiKey.startsWith('AIza')) {
       // Update server .env with API key
       const serverEnvContent = fs.readFileSync(serverEnvPath, 'utf8');
       const updatedContent = serverEnvContent.replace(
-        'OPENAI_API_KEY=sk-your-openai-api-key-here',
-        `OPENAI_API_KEY=${apiKey}`
+        'GEMINI_API_KEY=AIza-your-gemini-api-key-here',
+        `GEMINI_API_KEY=${apiKey}`
       );
       fs.writeFileSync(serverEnvPath, updatedContent);
-      console.log('✅ OpenAI API key added to server configuration');
+      console.log('✅ Gemini API key added to server configuration');
     } else {
       console.log('❌ Invalid API key format. Please add it manually later.');
     }

@@ -79,7 +79,7 @@ jobs:
           cd server
           npm test
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
   security-audit:
     name: Security Audit

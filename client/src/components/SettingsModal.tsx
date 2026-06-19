@@ -104,7 +104,7 @@ const SettingsModal: FC<SettingsModalProps> = ({ onClose, onApiKeyChange, curren
               className='block text-sm font-medium'
               style={{ color: 'var(--text)' }}
             >
-              OpenAI API Key
+              Gemini API Key
             </label>
             <div className='relative'>
               <input
@@ -112,7 +112,7 @@ const SettingsModal: FC<SettingsModalProps> = ({ onClose, onApiKeyChange, curren
                 type={showApiKey ? 'text' : 'password'}
                 value={apiKey}
                 onChange={e => setApiKey(e.target.value)}
-                placeholder='sk-…'
+                placeholder='AIza…'
                 className='field'
               />
               <button
@@ -162,13 +162,13 @@ const SettingsModal: FC<SettingsModalProps> = ({ onClose, onApiKeyChange, curren
             <p className='mt-2 text-[12px]' style={{ color: 'var(--text-dim)' }}>
               Get your key from{' '}
               <a
-                href='https://platform.openai.com/api-keys'
+                href='https://aistudio.google.com/apikey'
                 target='_blank'
                 rel='noopener noreferrer'
                 className='underline hover:no-underline'
                 style={{ color: 'var(--accent-ink)' }}
               >
-                OpenAI Platform
+                Google AI Studio
               </a>
             </p>
           </div>

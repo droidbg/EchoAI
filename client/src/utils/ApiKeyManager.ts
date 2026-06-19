@@ -1,14 +1,13 @@
 /**
  * API Key Manager for EchoAI
  *
- * This utility manages the user's OpenAI API key in the browser's
+ * This utility manages the user's Google Gemini API key in the browser's
  * sessionStorage so the key is cleared when the tab/session ends.
  *
  * Features:
  * - Session-scoped storage (not persisted across browser sessions)
- * - API key format validation
- * - Live API key testing against OpenAI
- * - Support for both legacy (sk-) and new (sk-proj-) key formats
+ * - API key format validation (Google "AIza…" keys)
+ * - Live API key testing against the Gemini API
  *
  * Security Note: The key is base64-ENCODED only to avoid plaintext-at-rest in
  * dev tools — this is NOT encryption and provides no protection against scripts
@@ -21,6 +20,7 @@
  */
 
 const API_KEY_STORAGE_KEY = 'echoai_user_api_key';
+const MODELS_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
 
 // base64 transform used only to avoid storing the raw key string verbatim.
 // NOT a security control — trivially reversible by anyone with page access.
@@ -87,36 +87,36 @@ export class ApiKeyManager {
   }
 
   /**
-   * Validate API key format
+   * Validate API key format (Google Gemini "AIza…" keys)
    */
   static validateApiKeyFormat(apiKey: string): {
     isValid: boolean;
     message: string;
   } {
-    if (!apiKey || !apiKey.trim()) {
+    const key = (apiKey || '').trim();
+
+    if (!key) {
       return { isValid: false, message: 'API key cannot be empty' };
     }
 
-    if (!apiKey.startsWith('sk-')) {
+    if (!key.startsWith('AIza')) {
       return {
         isValid: false,
-        message: 'OpenAI API keys should start with "sk-"',
+        message: 'Gemini API keys should start with "AIza"',
       };
     }
 
-    if (apiKey.length < 10) {
+    if (key.length < 30) {
       return { isValid: false, message: 'API key appears to be too short' };
     }
 
-    if (apiKey.length > 500) {
+    if (key.length > 100) {
       return { isValid: false, message: 'API key appears to be too long' };
     }
 
-    // Basic format validation for OpenAI keys
-    // OpenAI API keys can vary significantly in length and format
-    // Supports both sk- and sk-proj- formats
-    const keyPattern = /^sk(-proj)?-[a-zA-Z0-9_-]+$/;
-    if (!keyPattern.test(apiKey)) {
+    // Google API keys are "AIza" followed by URL-safe base64 characters.
+    const keyPattern = /^AIza[0-9A-Za-z_-]+$/;
+    if (!keyPattern.test(key)) {
       return { isValid: false, message: 'API key format appears invalid' };
     }
 
@@ -124,21 +124,18 @@ export class ApiKeyManager {
   }
 
   /**
-   * Test API key by making a simple request to OpenAI
+   * Test the API key by listing models on the Gemini API.
    */
   static async testApiKey(apiKey: string): Promise<{ isValid: boolean; message: string }> {
     try {
-      const response = await fetch('https://api.openai.com/v1/models', {
+      const response = await fetch(`${MODELS_ENDPOINT}?key=${encodeURIComponent(apiKey)}`, {
         method: 'GET',
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
       });
 
       if (response.ok) {
         return { isValid: true, message: 'API key is valid and working' };
-      } else if (response.status === 401) {
+      } else if (response.status === 400 || response.status === 403) {
         return {
           isValid: false,
           message: 'Invalid API key. Please check your key and try again.',
@@ -170,7 +167,7 @@ export class ApiKeyManager {
     const apiKey = this.getApiKey();
     if (!apiKey) return '';
 
-    if (apiKey.length <= 8) return 'sk-****';
+    if (apiKey.length <= 8) return '••••';
 
     const start = apiKey.substring(0, 6);
     const end = apiKey.substring(apiKey.length - 4);
@@ -186,8 +183,8 @@ export const API_KEY_SECURITY_NOTES = {
     'Your API key is kept only for the current browser session and is cleared when you close the tab. Never share your API key with others.',
   BEST_PRACTICES: [
     'Keep your API key private and never share it',
-    'Monitor your OpenAI usage regularly',
-    'Set usage limits in your OpenAI account',
+    'Monitor your Google AI Studio usage regularly',
+    'Set usage limits in your Google Cloud / AI Studio account',
     'Use environment variables in production applications',
     'Consider using API key rotation for enhanced security',
   ],
