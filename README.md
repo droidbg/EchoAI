@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./client/public/logo.webp" alt="EchoAI Logo" width="120" height="120">
+  <img src="./client/public/favicon.svg" alt="EchoAI Logo" width="120" height="120">
   
   # EchoAI
   
