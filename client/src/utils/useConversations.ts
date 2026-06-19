@@ -12,6 +12,7 @@
  */
 import { useCallback, useEffect, useMemo, useReducer } from 'react';
 import { Message } from '../components/ChatInput';
+import { newId } from './id';
 
 export interface Conversation {
   id: string;
@@ -24,9 +25,7 @@ export interface Conversation {
 const STORAGE_KEY = 'echoai_conversations';
 const DEFAULT_TITLE = 'New chat';
 
-const newId = (): string => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-
-const createBlank = (): Conversation => ({
+const createBlankConversation = (): Conversation => ({
   id: newId(),
   title: DEFAULT_TITLE,
   messages: [],
@@ -34,7 +33,7 @@ const createBlank = (): Conversation => ({
   updatedAt: Date.now(),
 });
 
-const load = (): Conversation[] => {
+const loadConversations = (): Conversation[] => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
@@ -55,8 +54,8 @@ interface State {
 }
 
 type Action =
-  | { type: 'ADD_MESSAGE'; convId: string; message: Message }
-  | { type: 'REMOVE_ERROR'; convId: string; errorId: string }
+  | { type: 'ADD_MESSAGE'; conversationId: string; message: Message }
+  | { type: 'REMOVE_ERROR'; conversationId: string; errorId: string }
   | { type: 'SELECT'; id: string }
   | { type: 'CREATE'; fresh: Conversation }
   | { type: 'DELETE'; id: string; fresh: Conversation }
@@ -69,7 +68,7 @@ function reducer(state: State, action: Action): State {
       return {
         ...state,
         conversations: state.conversations.map(c => {
-          if (c.id !== action.convId) return c;
+          if (c.id !== action.conversationId) return c;
           const isFirst = c.messages.length === 0;
           const title =
             isFirst && action.message.sender === 'user' && c.title === DEFAULT_TITLE
@@ -83,7 +82,7 @@ function reducer(state: State, action: Action): State {
       return {
         ...state,
         conversations: state.conversations.map(c =>
-          c.id === action.convId
+          c.id === action.conversationId
             ? { ...c, messages: c.messages.filter(m => m.errorId !== action.errorId) }
             : c
         ),
@@ -126,14 +125,14 @@ function reducer(state: State, action: Action): State {
   }
 }
 
-const init = (): State => {
-  const loaded = load();
-  const conversations = loaded.length ? loaded : [createBlank()];
+const createInitialState = (): State => {
+  const loaded = loadConversations();
+  const conversations = loaded.length ? loaded : [createBlankConversation()];
   return { conversations, activeId: conversations[0].id };
 };
 
 export function useConversations() {
-  const [state, dispatch] = useReducer(reducer, undefined, init);
+  const [state, dispatch] = useReducer(reducer, undefined, createInitialState);
 
   // Persist whenever the conversation list changes.
   useEffect(() => {
@@ -144,23 +143,23 @@ export function useConversations() {
     }
   }, [state.conversations]);
 
-  const activeChats = useMemo(
+  const activeMessages = useMemo(
     () => state.conversations.find(c => c.id === state.activeId)?.messages ?? [],
     [state.conversations, state.activeId]
   );
 
   const addMessage = useCallback(
-    (convId: string, message: Message) => dispatch({ type: 'ADD_MESSAGE', convId, message }),
+    (conversationId: string, message: Message) => dispatch({ type: 'ADD_MESSAGE', conversationId, message }),
     []
   );
   const removeErrorMessage = useCallback(
-    (convId: string, errorId: string) => dispatch({ type: 'REMOVE_ERROR', convId, errorId }),
+    (conversationId: string, errorId: string) => dispatch({ type: 'REMOVE_ERROR', conversationId, errorId }),
     []
   );
   const selectConversation = useCallback((id: string) => dispatch({ type: 'SELECT', id }), []);
-  const createConversation = useCallback(() => dispatch({ type: 'CREATE', fresh: createBlank() }), []);
+  const createConversation = useCallback(() => dispatch({ type: 'CREATE', fresh: createBlankConversation() }), []);
   const deleteConversation = useCallback(
-    (id: string) => dispatch({ type: 'DELETE', id, fresh: createBlank() }),
+    (id: string) => dispatch({ type: 'DELETE', id, fresh: createBlankConversation() }),
     []
   );
   const renameConversation = useCallback(
@@ -171,7 +170,7 @@ export function useConversations() {
   return {
     conversations: state.conversations,
     activeId: state.activeId,
-    activeChats,
+    activeMessages,
     selectConversation,
     createConversation,
     deleteConversation,

@@ -49,9 +49,9 @@ const Sidebar: FC<SidebarProps> = ({
     if (editingId) editRef.current?.focus();
   }, [editingId]);
 
-  const startRename = (c: Conversation) => {
-    setEditingId(c.id);
-    setDraft(c.title);
+  const startRename = (conversation: Conversation) => {
+    setEditingId(conversation.id);
+    setDraft(conversation.title);
   };
   const commitRename = () => {
     if (editingId) onRename(editingId, draft);
@@ -115,19 +115,19 @@ const Sidebar: FC<SidebarProps> = ({
           Recent
         </div>
         <nav className='mt-2 flex-1 space-y-0.5 overflow-y-auto px-2 pb-2'>
-          {conversations.map(c => {
-            const isActive = c.id === activeId;
-            const isEditing = editingId === c.id;
+          {conversations.map(conversation => {
+            const isActive = conversation.id === activeId;
+            const isEditing = editingId === conversation.id;
             return (
               <div
-                key={c.id}
+                key={conversation.id}
                 role='button'
                 tabIndex={0}
-                onClick={() => !isEditing && onSelect(c.id)}
+                onClick={() => !isEditing && onSelect(conversation.id)}
                 onKeyDown={e => {
                   if (!isEditing && (e.key === 'Enter' || e.key === ' ')) {
                     e.preventDefault();
-                    onSelect(c.id);
+                    onSelect(conversation.id);
                   }
                 }}
                 className={`nav-item ${isActive ? 'nav-item--active' : ''}`}
@@ -150,7 +150,7 @@ const Sidebar: FC<SidebarProps> = ({
                     className='nav-edit'
                   />
                 ) : (
-                  <span className='nav-item__title'>{c.title}</span>
+                  <span className='nav-item__title'>{conversation.title}</span>
                 )}
 
                 {!isEditing && (
@@ -158,7 +158,7 @@ const Sidebar: FC<SidebarProps> = ({
                     <button
                       onClick={e => {
                         e.stopPropagation();
-                        startRename(c);
+                        startRename(conversation);
                       }}
                       className='nav-action'
                       aria-label='Rename chat'
@@ -170,7 +170,7 @@ const Sidebar: FC<SidebarProps> = ({
                     <button
                       onClick={e => {
                         e.stopPropagation();
-                        onDelete(c.id);
+                        onDelete(conversation.id);
                       }}
                       className='nav-action nav-action--danger'
                       aria-label='Delete chat'

@@ -13,27 +13,45 @@
  * @license Apache-2.0
  */
 
-import { GoogleGenAI } from '@google/genai';
 import { Message } from '../components/ChatInput';
 import { ApiKeyManager } from './ApiKeyManager';
 
 const MODEL = 'gemini-2.5-flash';
 const SYSTEM_INSTRUCTION =
   'You are EchoAI, a helpful AI assistant. Provide clear, concise, and helpful responses.';
+const DEFAULT_SERVER_URL = 'https://echoai2.vercel.app/';
 
-export const fetchResponse = async (chats: Message[]) => {
+/** Human-readable message for a known server/HTTP status, or null if unmapped. */
+const serverErrorMessage = (status: number): string | null => {
+  switch (status) {
+    case 401:
+      return 'Server API key is invalid or expired. Please try using your own API key.';
+    case 429:
+      return 'Server rate limit exceeded. Please try again later or use your own API key.';
+    case 500:
+      return 'Server is experiencing issues. Please try again later or use your own API key.';
+    case 404:
+      return 'Server endpoint not found. Please try again later or use your own API key.';
+    default:
+      return null;
+  }
+};
+
+export const fetchResponse = async (messages: Message[]) => {
   try {
-    const message = chats.map(chat => (chat.sender === 'user' ? chat.message : '')).join(' \n');
+    const prompt = messages
+      .map(message => (message.sender === 'user' ? message.message : ''))
+      .join(' \n');
 
     // Check if user has provided their own API key
     const userApiKey = ApiKeyManager.getApiKey();
 
     if (userApiKey) {
       // Use the user's Gemini API key directly
-      return await fetchWithUserApiKey(message, userApiKey);
+      return await fetchWithUserApiKey(prompt, userApiKey);
     } else {
       // Use the server's API key
-      return await fetchWithServerApi(message);
+      return await fetchWithServerApiKey(prompt);
     }
   } catch (error) {
     if (error instanceof TypeError && error.message.includes('fetch')) {
@@ -48,14 +66,17 @@ export const fetchResponse = async (chats: Message[]) => {
   }
 };
 
-// Fetch response using the user's Gemini API key directly via the GenAI SDK
-const fetchWithUserApiKey = async (message: string, apiKey: string) => {
+// Fetch response using the user's Gemini API key directly via the GenAI SDK.
+// The SDK is imported lazily so its weight stays out of the initial bundle —
+// most sessions use the server fallback and never load it.
+const fetchWithUserApiKey = async (prompt: string, apiKey: string) => {
   try {
+    const { GoogleGenAI } = await import('@google/genai');
     const ai = new GoogleGenAI({ apiKey });
 
     const response = await ai.models.generateContent({
       model: MODEL,
-      contents: message,
+      contents: prompt,
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
         maxOutputTokens: 1000,
@@ -89,48 +110,31 @@ const fetchWithUserApiKey = async (message: string, apiKey: string) => {
 };
 
 // Fetch response using server API key (fallback)
-const fetchWithServerApi = async (message: string) => {
-  const serverUrl = import.meta.env.VITE_SERVER_URL;
+const fetchWithServerApiKey = async (prompt: string) => {
+  const serverUrl = import.meta.env.VITE_SERVER_URL ?? DEFAULT_SERVER_URL;
 
-  const response = await fetch(serverUrl ?? 'https://echoai2.vercel.app/', {
+  const response = await fetch(serverUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ message: message }),
+    body: JSON.stringify({ message: prompt }),
   });
 
   if (!response.ok) {
-    if (response.status === 401) {
-      throw new Error('Server API key is invalid or expired. Please try using your own API key.');
-    } else if (response.status === 429) {
-      throw new Error(
-        'Server rate limit exceeded. Please try again later or use your own API key.'
-      );
-    } else if (response.status === 500) {
-      throw new Error(
-        'Server is experiencing issues. Please try again later or use your own API key.'
-      );
-    } else if (response.status === 404) {
-      throw new Error('Server endpoint not found. Please try again later or use your own API key.');
-    } else {
-      throw new Error(
+    throw new Error(
+      serverErrorMessage(response.status) ??
         `Server error (${response.status}). Please try again or use your own API key.`
-      );
-    }
+    );
   }
 
   const data = await response.json();
-  if (data.status == 401) {
-    throw new Error('Server API key is invalid or expired. Please try using your own API key.');
-  } else if (data.status == 429) {
-    throw new Error('Server rate limit exceeded. Please try again later or use your own API key.');
-  } else if (data.status == 500) {
+  // The proxy may return a 200 envelope carrying an error status in the body.
+  if (data.status && data.status !== 200) {
     throw new Error(
-      'Server is experiencing issues. Please try again later or use your own API key.'
+      serverErrorMessage(data.status) ??
+        `Server error (${data.status}). Please try again or use your own API key.`
     );
-  } else if (data.status && data.status !== 200) {
-    throw new Error(`Server error (${data.status}). Please try again or use your own API key.`);
   }
   return data;
 };

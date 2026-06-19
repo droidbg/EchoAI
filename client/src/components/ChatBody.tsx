@@ -7,7 +7,7 @@ import TypingIndicator from './TypingIndicator';
 import UserChat from './UserChat';
 
 interface ChatBodyProps {
-  chats: Message[];
+  messages: Message[];
   isDarkMode: boolean;
   isLoading?: boolean;
   onSuggestionClick?: (suggestion: string) => void;
@@ -16,12 +16,17 @@ interface ChatBodyProps {
   isRetrying?: boolean;
 }
 
-/** Prompt presets — `key` matches App's promptMap; the rest is presentation. */
-const SUGGESTIONS: { key: string; title: string; hint: string; icon: ReactNode }[] = [
+/**
+ * Prompt presets shown on the empty state. Each card owns both its presentation
+ * and the full prompt it expands to, so there's no cross-file key coupling — the
+ * card hands the ready-to-send prompt straight to `onSuggestionClick`.
+ */
+const SUGGESTIONS: { title: string; hint: string; prompt: string; icon: ReactNode }[] = [
   {
-    key: 'Explain quantum computing',
     title: 'Explain a concept',
     hint: 'Quantum computing, made simple',
+    prompt:
+      'Please explain quantum computing in simple terms, covering the basic concepts like qubits, superposition, and entanglement, and how it differs from classical computing.',
     icon: (
       <path
         strokeLinecap='round'
@@ -32,9 +37,10 @@ const SUGGESTIONS: { key: string; title: string; hint: string; icon: ReactNode }
     ),
   },
   {
-    key: 'Write a creative story',
     title: 'Write something',
     hint: 'A short, original story',
+    prompt:
+      'Help me write a creative short story. Please provide an engaging plot with interesting characters and a compelling narrative structure.',
     icon: (
       <path
         strokeLinecap='round'
@@ -45,9 +51,10 @@ const SUGGESTIONS: { key: string; title: string; hint: string; icon: ReactNode }
     ),
   },
   {
-    key: 'Help with coding',
     title: 'Help me build',
     hint: 'Debug & best practices',
+    prompt:
+      'I need help with coding. Please assist me with best practices, debugging techniques, and provide clear explanations with examples.',
     icon: (
       <path
         strokeLinecap='round'
@@ -58,9 +65,10 @@ const SUGGESTIONS: { key: string; title: string; hint: string; icon: ReactNode }
     ),
   },
   {
-    key: 'Plan a vacation',
     title: 'Plan a trip',
     hint: 'A full itinerary, sorted',
+    prompt:
+      'Help me create a comprehensive vacation plan including popular destinations, must-visit attractions, recommended hotels, local cuisine, and travel tips.',
     icon: (
       <path
         strokeLinecap='round'
@@ -73,42 +81,43 @@ const SUGGESTIONS: { key: string; title: string; hint: string; icon: ReactNode }
 ];
 
 const ChatBody: FC<ChatBodyProps> = ({
-  chats,
+  messages,
   isLoading = false,
   onSuggestionClick,
   onRetryMessage,
   onUseOwnKey,
   isRetrying = false,
 }) => {
-  const parent = useRef(null);
+  const listRef = useRef(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-    parent.current && autoAnimate(parent.current);
-  }, [parent]);
+    if (listRef.current) autoAnimate(listRef.current);
+  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chats, isLoading]);
+  }, [messages, isLoading]);
 
-  const isEmpty = chats.length === 0 && !isLoading;
+  const isEmpty = messages.length === 0 && !isLoading;
 
   return (
-    <div className='flex flex-1 flex-col gap-5' ref={parent}>
-      {chats.map((chat: Message) => {
-        return chat.sender === 'user' ? (
-          <UserChat key={chat.id} message={chat.message} />
+    <div className='flex flex-1 flex-col gap-5' ref={listRef}>
+      {messages.map((message: Message) => {
+        return message.sender === 'user' ? (
+          <UserChat key={message.id} message={message.message} />
         ) : (
           <AiChat
-            key={chat.id}
-            message={chat.message}
-            isError={chat.isError}
+            key={message.id}
+            message={message.message}
+            isError={message.isError}
             onRetry={
-              chat.isError && chat.errorId ? () => onRetryMessage?.(chat.errorId!) : undefined
+              message.isError && message.errorId
+                ? () => onRetryMessage?.(message.errorId!)
+                : undefined
             }
-            onUseOwnKey={chat.isError ? onUseOwnKey : undefined}
-            isRetrying={chat.isError && isRetrying}
+            onUseOwnKey={message.isError ? onUseOwnKey : undefined}
+            isRetrying={message.isError && isRetrying}
           />
         );
       })}
@@ -136,11 +145,11 @@ const ChatBody: FC<ChatBodyProps> = ({
           </p>
 
           <div className='mt-10 grid w-full max-w-2xl grid-cols-1 gap-3.5 sm:grid-cols-2'>
-            {SUGGESTIONS.map((s, index) => (
+            {SUGGESTIONS.map((suggestion, index) => (
               <button
-                key={s.key}
+                key={suggestion.title}
                 type='button'
-                onClick={() => onSuggestionClick?.(s.key)}
+                onClick={() => onSuggestionClick?.(suggestion.prompt)}
                 className='suggest-card rise'
                 style={{ animationDelay: `${0.26 + index * 0.08}s` }}
               >
@@ -152,7 +161,7 @@ const ChatBody: FC<ChatBodyProps> = ({
                       stroke='currentColor'
                       viewBox='0 0 24 24'
                     >
-                      {s.icon}
+                      {suggestion.icon}
                     </svg>
                   </span>
                   <svg
@@ -170,10 +179,10 @@ const ChatBody: FC<ChatBodyProps> = ({
                   </svg>
                 </div>
                 <h3 className='mt-4 text-[15.5px] font-semibold' style={{ color: 'var(--text)' }}>
-                  {s.title}
+                  {suggestion.title}
                 </h3>
                 <p className='mt-1 text-[13.5px]' style={{ color: 'var(--text-dim)' }}>
-                  {s.hint}
+                  {suggestion.hint}
                 </p>
               </button>
             ))}

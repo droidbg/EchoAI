@@ -17,20 +17,19 @@ import ChatInput, { ChatInputRef, Message } from './components/ChatInput';
 import Header from './components/Header';
 import SettingsModal from './components/SettingsModal';
 import Sidebar from './components/Sidebar';
-import { fetchResponse } from './utils/Api';
+import { fetchResponse } from './utils/api';
 import { ApiKeyManager } from './utils/ApiKeyManager';
+import { newId } from './utils/id';
 import { useConversations } from './utils/useConversations';
 
 const NAME_KEY = 'echoai_display_name';
-
-const newMessageId = (): string =>
-  Date.now().toString() + Math.random().toString(36).substr(2, 9);
+const THEME_KEY = 'echoai_theme';
 
 function App() {
   const {
     conversations,
     activeId,
-    activeChats,
+    activeMessages,
     selectConversation,
     createConversation,
     deleteConversation,
@@ -41,7 +40,14 @@ function App() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  // Dark-first by default; an explicit toggle is remembered across visits.
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    try {
+      return localStorage.getItem(THEME_KEY) !== 'light';
+    } catch {
+      return true;
+    }
+  });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [userApiKey, setUserApiKey] = useState<string>('');
@@ -50,7 +56,7 @@ function App() {
   const chatInputRef = useRef<ChatInputRef>(null);
   // The conversation a pending request belongs to (so a reply lands in the
   // right chat even if the user switches conversations mid-request).
-  const pendingConvId = useRef<string>('');
+  const pendingConversationId = useRef<string>('');
 
   useEffect(() => {
     setUserApiKey(ApiKeyManager.getApiKey() || '');
@@ -61,6 +67,14 @@ function App() {
       /* ignore */
     }
   }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(THEME_KEY, isDarkMode ? 'dark' : 'light');
+    } catch {
+      /* ignore */
+    }
+  }, [isDarkMode]);
 
   const handleApiKeyChange = (newApiKey: string) => {
     if (newApiKey) {
@@ -84,8 +98,8 @@ function App() {
   const mutation = useMutation({
     mutationFn: (messages: Message[]) => fetchResponse(messages),
     onSuccess: (data: { message: string }) => {
-      addMessage(pendingConvId.current || activeId, {
-        id: newMessageId(),
+      addMessage(pendingConversationId.current || activeId, {
+        id: newId(),
         sender: 'ai',
         message: data.message.replace(/^\n\n/, ''),
       });
@@ -94,12 +108,12 @@ function App() {
       console.error('Error fetching response:', error);
       const errorMessage =
         error instanceof Error ? error.message : 'Something went wrong. Please try again.';
-      addMessage(pendingConvId.current || activeId, {
-        id: newMessageId(),
+      addMessage(pendingConversationId.current || activeId, {
+        id: newId(),
         sender: 'ai',
         message: errorMessage,
         isError: true,
-        errorId: `error_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        errorId: `error_${newId()}`,
       });
     },
     onSettled: () => {
@@ -109,45 +123,35 @@ function App() {
   });
 
   const sendMessage = (message: Message) => {
-    pendingConvId.current = activeId;
+    pendingConversationId.current = activeId;
     addMessage(activeId, message);
     setIsLoading(true);
     mutation.mutate([message]);
   };
 
   const handleRetryMessage = (errorId: string) => {
-    const errorIndex = activeChats.findIndex(chat => chat.errorId === errorId);
+    const errorIndex = activeMessages.findIndex(message => message.errorId === errorId);
     if (errorIndex === -1) return;
 
     let userMessageIndex = -1;
     for (let i = errorIndex - 1; i >= 0; i--) {
-      if (activeChats[i].sender === 'user') {
+      if (activeMessages[i].sender === 'user') {
         userMessageIndex = i;
         break;
       }
     }
     if (userMessageIndex === -1) return;
 
-    const userMessage = activeChats[userMessageIndex];
-    pendingConvId.current = activeId;
+    const userMessage = activeMessages[userMessageIndex];
+    pendingConversationId.current = activeId;
     removeErrorMessage(activeId, errorId);
     setIsRetrying(true);
     setIsLoading(true);
     mutation.mutate([userMessage]);
   };
 
-  const handleSuggestionClick = (suggestion: string) => {
-    const promptMap: { [key: string]: string } = {
-      'Explain quantum computing':
-        'Please explain quantum computing in simple terms, covering the basic concepts like qubits, superposition, and entanglement, and how it differs from classical computing.',
-      'Write a creative story':
-        'Help me write a creative short story. Please provide an engaging plot with interesting characters and a compelling narrative structure.',
-      'Help with coding':
-        'I need help with coding. Please assist me with best practices, debugging techniques, and provide clear explanations with examples.',
-      'Plan a vacation':
-        'Help me create a comprehensive vacation plan including popular destinations, must-visit attractions, recommended hotels, local cuisine, and travel tips.',
-    };
-    chatInputRef.current?.setSuggestion(promptMap[suggestion] || suggestion);
+  const handleSuggestionClick = (prompt: string) => {
+    chatInputRef.current?.setSuggestion(prompt);
   };
 
   const handleNewChat = () => {
@@ -193,7 +197,7 @@ function App() {
           <main className='min-h-0 flex-1 overflow-y-auto'>
             <div className='mx-auto flex min-h-full w-full max-w-3xl flex-col px-4 py-6 sm:px-6'>
               <ChatBody
-                chats={activeChats}
+                messages={activeMessages}
                 isDarkMode={isDarkMode}
                 isLoading={isLoading}
                 onSuggestionClick={handleSuggestionClick}

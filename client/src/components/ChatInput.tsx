@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { newId } from '../utils/id';
 
 export type Message = {
-  id: string; // Added stable unique id
-  sender: string;
+  id: string; // Stable unique id for list keys and retries
+  sender: 'user' | 'ai';
   message: string;
   isError?: boolean;
   errorId?: string; // Unique identifier for error messages to handle retries
@@ -18,7 +19,7 @@ interface ChatInputProps {
   isDarkMode: boolean;
 }
 
-const MAX = 2000;
+const MAX_MESSAGE_LENGTH = 2000;
 
 const ChatInput = React.forwardRef<ChatInputRef, ChatInputProps>(
   ({ sendMessage, isLoading }, ref) => {
@@ -35,7 +36,7 @@ const ChatInput = React.forwardRef<ChatInputRef, ChatInputProps>(
     const handleSubmit = () => {
       if (value.trim() === '' || isLoading) return;
       sendMessage({
-        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        id: newId(),
         sender: 'user',
         message: value.trim(),
       });
@@ -66,7 +67,7 @@ const ChatInput = React.forwardRef<ChatInputRef, ChatInputProps>(
             ref={textareaRef}
             rows={1}
             value={value}
-            onChange={e => setValue(e.target.value.slice(0, MAX))}
+            onChange={e => setValue(e.target.value.slice(0, MAX_MESSAGE_LENGTH))}
             onKeyDown={handleKeyDown}
             placeholder='Message EchoAI…'
             data-testid='chat-input'
@@ -105,7 +106,7 @@ const ChatInput = React.forwardRef<ChatInputRef, ChatInputProps>(
           <span className='hidden sm:inline'>Enter to send · Shift + Enter for a new line</span>
           <span className='sm:hidden'>Enter to send</span>
           <span>
-            {value.length}/{MAX}
+            {value.length}/{MAX_MESSAGE_LENGTH}
           </span>
         </div>
       </div>
