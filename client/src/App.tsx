@@ -1,79 +1,65 @@
 /**
  * EchoAI Main Application Component
  *
- * This is the main React component that orchestrates the entire EchoAI application.
- * It manages chat state, API key management, theme switching, and error handling.
- *
- * Features:
- * - Chat message management and display
- * - Dark/light mode theme switching
- * - API key management and validation
- * - Error handling with retry mechanisms
- * - Suggestion prompts for common use cases
- * - Responsive design for all devices
+ * Orchestrates the workspace: a conversation sidebar, the chat workspace, API
+ * key management, theme switching and error handling. Conversations persist
+ * client-side via the useConversations store.
  *
  * @author EchoAI Contributors
  * @license Apache-2.0
  */
 
 import { Analytics } from '@vercel/analytics/react';
-import { useEffect, useReducer, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMutation } from 'react-query';
 import ChatBody from './components/ChatBody';
 import ChatInput, { ChatInputRef, Message } from './components/ChatInput';
 import Header from './components/Header';
 import SettingsModal from './components/SettingsModal';
+import Sidebar from './components/Sidebar';
 import { fetchResponse } from './utils/Api';
 import { ApiKeyManager } from './utils/ApiKeyManager';
+import { useConversations } from './utils/useConversations';
 
-type AppState = {
-  chats: Message[];
-  isLoading: boolean;
-  isRetrying: boolean;
-};
+const NAME_KEY = 'echoai_display_name';
 
-type AppAction =
-  | { type: 'ADD_MESSAGE'; message: Message }
-  | { type: 'REMOVE_ERROR_MESSAGE'; errorId: string }
-  | { type: 'SET_LOADING'; isLoading: boolean }
-  | { type: 'SET_RETRYING'; isRetrying: boolean }
-  | { type: 'SET_CHATS'; chats: Message[] };
-
-function appReducer(state: AppState, action: AppAction): AppState {
-  switch (action.type) {
-    case 'ADD_MESSAGE':
-      return { ...state, chats: [...state.chats, action.message] };
-    case 'REMOVE_ERROR_MESSAGE':
-      return { ...state, chats: state.chats.filter(c => c.errorId !== action.errorId) };
-    case 'SET_LOADING':
-      return { ...state, isLoading: action.isLoading };
-    case 'SET_RETRYING':
-      return { ...state, isRetrying: action.isRetrying };
-    case 'SET_CHATS':
-      return { ...state, chats: action.chats };
-    default:
-      return state;
-  }
-}
+const newMessageId = (): string =>
+  Date.now().toString() + Math.random().toString(36).substr(2, 9);
 
 function App() {
-  const [state, dispatch] = useReducer(appReducer, {
-    chats: [],
-    isLoading: false,
-    isRetrying: false,
-  });
+  const {
+    conversations,
+    activeId,
+    activeChats,
+    selectConversation,
+    createConversation,
+    deleteConversation,
+    renameConversation,
+    addMessage,
+    removeErrorMessage,
+  } = useConversations();
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [userApiKey, setUserApiKey] = useState<string>('');
+  const [displayName, setDisplayName] = useState<string>('You');
 
   const chatInputRef = useRef<ChatInputRef>(null);
+  // The conversation a pending request belongs to (so a reply lands in the
+  // right chat even if the user switches conversations mid-request).
+  const pendingConvId = useRef<string>('');
 
-  const { chats, isLoading, isRetrying } = state;
-
-  // Load user API key on component mount
   useEffect(() => {
-    const storedApiKey = ApiKeyManager.getApiKey();
-    setUserApiKey(storedApiKey || '');
+    setUserApiKey(ApiKeyManager.getApiKey() || '');
+    try {
+      const stored = localStorage.getItem(NAME_KEY);
+      if (stored) setDisplayName(stored);
+    } catch {
+      /* ignore */
+    }
   }, []);
 
   const handleApiKeyChange = (newApiKey: string) => {
@@ -85,90 +71,72 @@ function App() {
     setUserApiKey(newApiKey);
   };
 
-  const handleRetryMessage = async (errorId: string) => {
-    // Find the user message that corresponds to this error
-    const errorIndex = chats.findIndex(chat => chat.errorId === errorId);
-    if (errorIndex === -1) return;
-
-    // Find the user message before this error
-    let userMessageIndex = -1;
-    for (let i = errorIndex - 1; i >= 0; i--) {
-      if (chats[i].sender === 'user') {
-        userMessageIndex = i;
-        break;
-      }
-    }
-
-    if (userMessageIndex === -1) return;
-
-    const userMessage = chats[userMessageIndex];
-
-    // Remove the error message
-    dispatch({ type: 'REMOVE_ERROR_MESSAGE', errorId });
-
-    dispatch({ type: 'SET_RETRYING', isRetrying: true });
-    dispatch({ type: 'SET_LOADING', isLoading: true });
-
+  const handleDisplayNameChange = (name: string) => {
+    const clean = name.trim() || 'You';
+    setDisplayName(clean);
     try {
-      mutation.mutate([userMessage]);
-    } catch (error) {
-      console.error('Retry failed:', error);
-    } finally {
-      dispatch({ type: 'SET_RETRYING', isRetrying: false });
+      localStorage.setItem(NAME_KEY, clean);
+    } catch {
+      /* ignore */
     }
-  };
-
-  const handleUseOwnKey = () => {
-    setIsSettingsOpen(true);
   };
 
   const mutation = useMutation({
-    mutationFn: (messages: Message[]) => {
-      return fetchResponse(messages);
-    },
+    mutationFn: (messages: Message[]) => fetchResponse(messages),
     onSuccess: (data: { message: string }) => {
-      dispatch({
-        type: 'ADD_MESSAGE',
-        message: {
-          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-          sender: 'ai',
-          message: data.message.replace(/^\n\n/, ''),
-        },
+      addMessage(pendingConvId.current || activeId, {
+        id: newMessageId(),
+        sender: 'ai',
+        message: data.message.replace(/^\n\n/, ''),
       });
-      dispatch({ type: 'SET_LOADING', isLoading: false });
     },
     onError: (error: unknown) => {
       console.error('Error fetching response:', error);
       const errorMessage =
         error instanceof Error ? error.message : 'Something went wrong. Please try again.';
-      const errorId = `error_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-      dispatch({
-        type: 'ADD_MESSAGE',
-        message: {
-          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-          sender: 'ai',
-          message: errorMessage,
-          isError: true,
-          errorId: errorId,
-        },
+      addMessage(pendingConvId.current || activeId, {
+        id: newMessageId(),
+        sender: 'ai',
+        message: errorMessage,
+        isError: true,
+        errorId: `error_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       });
-      dispatch({ type: 'SET_LOADING', isLoading: false });
     },
     onSettled: () => {
-      // This runs after both success and error
-      dispatch({ type: 'SET_LOADING', isLoading: false });
+      setIsLoading(false);
+      setIsRetrying(false);
     },
   });
 
-  const sendMessage = async (message: Message) => {
-    dispatch({ type: 'ADD_MESSAGE', message });
-    dispatch({ type: 'SET_LOADING', isLoading: true });
+  const sendMessage = (message: Message) => {
+    pendingConvId.current = activeId;
+    addMessage(activeId, message);
+    setIsLoading(true);
     mutation.mutate([message]);
   };
 
+  const handleRetryMessage = (errorId: string) => {
+    const errorIndex = activeChats.findIndex(chat => chat.errorId === errorId);
+    if (errorIndex === -1) return;
+
+    let userMessageIndex = -1;
+    for (let i = errorIndex - 1; i >= 0; i--) {
+      if (activeChats[i].sender === 'user') {
+        userMessageIndex = i;
+        break;
+      }
+    }
+    if (userMessageIndex === -1) return;
+
+    const userMessage = activeChats[userMessageIndex];
+    pendingConvId.current = activeId;
+    removeErrorMessage(activeId, errorId);
+    setIsRetrying(true);
+    setIsLoading(true);
+    mutation.mutate([userMessage]);
+  };
+
   const handleSuggestionClick = (suggestion: string) => {
-    // Map suggestions to better AI prompts
     const promptMap: { [key: string]: string } = {
       'Explain quantum computing':
         'Please explain quantum computing in simple terms, covering the basic concepts like qubits, superposition, and entanglement, and how it differs from classical computing.',
@@ -179,73 +147,76 @@ function App() {
       'Plan a vacation':
         'Help me create a comprehensive vacation plan including popular destinations, must-visit attractions, recommended hotels, local cuisine, and travel tips.',
     };
-
-    const prompt = promptMap[suggestion] || suggestion;
-    chatInputRef.current?.setSuggestion(prompt);
+    chatInputRef.current?.setSuggestion(promptMap[suggestion] || suggestion);
   };
 
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
+  const handleNewChat = () => {
+    createConversation();
+    setIsSidebarOpen(false);
   };
+
+  const handleSelectConversation = (id: string) => {
+    selectConversation(id);
+    setIsSidebarOpen(false);
+  };
+
+  const toggleDarkMode = () => setIsDarkMode(prev => !prev);
 
   return (
-    <div
-      className={`${
-        isDarkMode ? 'bg-slate-900' : 'bg-blue-50'
-      } min-h-screen transition-all duration-500`}
-      style={{ minHeight: '100vh' }}
-    >
-      {/* Background Gradient Overlay */}
-      <div
-        className={`absolute inset-0 ${
-          isDarkMode
-            ? 'bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900'
-            : 'bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50'
-        }`}
-      ></div>
+    <div className={`relative h-dvh overflow-hidden ${isDarkMode ? '' : 'theme-light'}`}>
+      <div className='aura' />
 
-      {/* Background Pattern */}
-      <div className='absolute inset-0 opacity-5'>
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%239C92AC%22%20fill-opacity%3D%220.1%22%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%222%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]"></div>
-      </div>
-
-      <div className='relative z-10 flex flex-col min-h-screen' style={{ minHeight: '100vh' }}>
-        <Header
-          isDarkMode={isDarkMode}
-          toggleDarkMode={toggleDarkMode}
-          userApiKey={userApiKey}
+      <div className='relative z-10 flex h-full'>
+        <Sidebar
+          conversations={conversations}
+          activeId={activeId}
+          onSelect={handleSelectConversation}
+          onNewChat={handleNewChat}
+          onDelete={deleteConversation}
+          onRename={renameConversation}
+          displayName={displayName}
+          onDisplayNameChange={handleDisplayNameChange}
           onOpenSettings={() => setIsSettingsOpen(true)}
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
         />
 
-        {/* Main Chat Area */}
-        <main className='flex-1 flex flex-col max-w-4xl mx-auto w-full px-2 sm:px-4 py-4 sm:py-6'>
-          <div className='flex-1 overflow-hidden rounded-xl sm:rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 shadow-2xl'>
-            <div className='h-full overflow-auto p-3 sm:p-6'>
+        <div className='flex h-full min-w-0 flex-1 flex-col'>
+          <Header
+            isDarkMode={isDarkMode}
+            toggleDarkMode={toggleDarkMode}
+            userApiKey={userApiKey}
+            onOpenSettings={() => setIsSettingsOpen(true)}
+            onOpenSidebar={() => setIsSidebarOpen(true)}
+          />
+
+          <main className='min-h-0 flex-1 overflow-y-auto'>
+            <div className='mx-auto flex min-h-full w-full max-w-3xl flex-col px-4 py-6 sm:px-6'>
               <ChatBody
-                chats={chats}
+                chats={activeChats}
                 isDarkMode={isDarkMode}
                 isLoading={isLoading}
                 onSuggestionClick={handleSuggestionClick}
                 onRetryMessage={handleRetryMessage}
-                onUseOwnKey={handleUseOwnKey}
+                onUseOwnKey={() => setIsSettingsOpen(true)}
                 isRetrying={isRetrying}
               />
             </div>
-          </div>
+          </main>
 
-          {/* Chat Input */}
-          <div className='mt-4 sm:mt-6'>
-            <ChatInput
-              ref={chatInputRef}
-              sendMessage={sendMessage}
-              isLoading={isLoading}
-              isDarkMode={isDarkMode}
-            />
+          <div className='px-4 pb-4 sm:px-6 sm:pb-6'>
+            <div className='mx-auto w-full max-w-3xl'>
+              <ChatInput
+                ref={chatInputRef}
+                sendMessage={sendMessage}
+                isLoading={isLoading}
+                isDarkMode={isDarkMode}
+              />
+            </div>
           </div>
-        </main>
+        </div>
       </div>
 
-      {/* Settings Modal */}
       {isSettingsOpen && (
         <SettingsModal
           onClose={() => setIsSettingsOpen(false)}

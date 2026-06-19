@@ -8,16 +8,14 @@ interface SettingsModalProps {
   currentApiKey: string;
 }
 
-const SettingsModal: FC<SettingsModalProps> = ({
-  onClose,
-  isDarkMode,
-  onApiKeyChange,
-  currentApiKey,
-}) => {
+const SettingsModal: FC<SettingsModalProps> = ({ onClose, onApiKeyChange, currentApiKey }) => {
   const [apiKey, setApiKey] = useState(() => currentApiKey);
   const [showApiKey, setShowApiKey] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
   const [validationMessage, setValidationMessage] = useState('');
+
+  const isPositive =
+    validationMessage.includes('success') || validationMessage.includes('cleared');
 
   const handleSave = async () => {
     if (!apiKey.trim()) {
@@ -25,7 +23,6 @@ const SettingsModal: FC<SettingsModalProps> = ({
       return;
     }
 
-    // Validate API key format
     const formatValidation = ApiKeyManager.validateApiKeyFormat(apiKey);
     if (!formatValidation.isValid) {
       setValidationMessage(formatValidation.message);
@@ -36,23 +33,17 @@ const SettingsModal: FC<SettingsModalProps> = ({
     setValidationMessage('');
 
     try {
-      // Test the API key
       const testResult = await ApiKeyManager.testApiKey(apiKey);
-
       if (testResult.isValid) {
         onApiKeyChange(apiKey);
         setValidationMessage('API key saved successfully!');
-        setTimeout(() => {
-          onClose();
-        }, 1500);
+        setTimeout(() => onClose(), 1500);
       } else {
         setValidationMessage(testResult.message);
       }
     } catch (error) {
       console.error('API key validation error:', error);
-      setValidationMessage(
-        'Failed to validate API key. Please check your connection and try again.'
-      );
+      setValidationMessage('Failed to validate API key. Please check your connection and try again.');
     } finally {
       setIsValidating(false);
     }
@@ -62,64 +53,56 @@ const SettingsModal: FC<SettingsModalProps> = ({
     setApiKey('');
     onApiKeyChange('');
     setValidationMessage('API key cleared. Using default server key.');
-    setTimeout(() => {
-      onClose();
-    }, 1500);
+    setTimeout(() => onClose(), 1500);
   };
 
   return (
-    <div className='fixed inset-0 z-50 flex items-center justify-center p-4'>
+    <div className='fixed inset-0 z-50 flex items-center justify-center p-4 fade'>
       {/* Backdrop */}
       <div
         role='button'
         tabIndex={0}
+        aria-label='Close settings'
         onKeyDown={e => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             onClose();
           }
         }}
-        className='absolute inset-0 bg-black/50 backdrop-blur-sm'
+        className='absolute inset-0'
+        style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }}
         onClick={onClose}
       />
 
       {/* Modal */}
-      <div
-        data-testid='settings-modal'
-        className={`relative w-full max-w-md rounded-2xl shadow-2xl ${
-          isDarkMode ? 'bg-slate-800 border border-white/20' : 'bg-white border border-gray-200'
-        }`}
-      >
+      <div data-testid='settings-modal' className='modal-card relative w-full max-w-md rise'>
         {/* Header */}
-        <div className='flex items-center justify-between p-6 border-b border-white/10'>
-          <h2 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+        <div
+          className='flex items-center justify-between p-6'
+          style={{ borderBottom: '1px solid var(--border)' }}
+        >
+          <h2 className='font-display text-xl font-semibold' style={{ color: 'var(--text)' }}>
             API Settings
           </h2>
           <button
             onClick={onClose}
             data-testid='settings-close'
-            className={`p-2 rounded-full transition-colors ${
-              isDarkMode ? 'hover:bg-white/10 text-white' : 'hover:bg-gray-100 text-gray-600'
-            }`}
+            className='icon-btn h-9 w-9'
+            aria-label='Close'
           >
-            <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                strokeWidth={2}
-                d='M6 18L18 6M6 6l12 12'
-              />
+            <svg className='h-[18px] w-[18px]' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={1.9} d='M6 18L18 6M6 6l12 12' />
             </svg>
           </button>
         </div>
 
         {/* Content */}
-        <div className='p-6 space-y-6'>
-          {/* API Key Input */}
-          <div className='space-y-3'>
+        <div className='space-y-5 p-6'>
+          <div className='space-y-2.5'>
             <label
               htmlFor='api-key-input'
-              className={`block text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-700'}`}
+              className='block text-sm font-medium'
+              style={{ color: 'var(--text)' }}
             >
               OpenAI API Key
             </label>
@@ -129,123 +112,79 @@ const SettingsModal: FC<SettingsModalProps> = ({
                 type={showApiKey ? 'text' : 'password'}
                 value={apiKey}
                 onChange={e => setApiKey(e.target.value)}
-                placeholder='sk-...'
-                className={`w-full px-4 py-3 pr-12 rounded-xl border transition-colors ${
-                  isDarkMode
-                    ? 'bg-slate-700 border-white/20 text-white placeholder-white/50 focus:border-purple-400'
-                    : 'bg-gray-50 border-gray-200 text-gray-800 placeholder-gray-400 focus:border-purple-400'
-                } focus:outline-none focus:ring-2 focus:ring-purple-400/20`}
+                placeholder='sk-…'
+                className='field'
               />
               <button
                 type='button'
                 onClick={() => setShowApiKey(!showApiKey)}
-                className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded ${
-                  isDarkMode
-                    ? 'text-white/60 hover:text-white'
-                    : 'text-gray-400 hover:text-gray-600'
-                }`}
+                aria-label={showApiKey ? 'Hide API key' : 'Show API key'}
+                className='absolute right-3 top-1/2 -translate-y-1/2'
+                style={{ color: 'var(--text-faint)' }}
               >
                 {showApiKey ? (
-                  <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                     <path
                       strokeLinecap='round'
                       strokeLinejoin='round'
-                      strokeWidth={2}
+                      strokeWidth={1.8}
                       d='M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21'
                     />
                   </svg>
                 ) : (
-                  <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={1.8} d='M15 12a3 3 0 11-6 0 3 3 0 016 0z' />
                     <path
                       strokeLinecap='round'
                       strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M15 12a3 3 0 11-6 0 3 3 0 016 0z'
-                    />
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
+                      strokeWidth={1.8}
                       d='M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z'
                     />
                   </svg>
                 )}
               </button>
             </div>
+            <p className='text-[12px]' style={{ color: 'var(--text-faint)' }}>
+              Stored only in this browser session — never sent to our servers.
+            </p>
           </div>
 
-          {/* Info Text */}
-          <div
-            className={`p-4 rounded-xl ${
-              isDarkMode
-                ? 'bg-blue-900/20 border border-blue-500/20'
-                : 'bg-blue-50 border border-blue-200'
-            }`}
-          >
-            <div className='flex items-start space-x-3'>
-              <svg
-                className={`w-5 h-5 mt-0.5 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
+          {/* Info */}
+          <div className='info-panel p-4'>
+            <p className='text-sm font-medium' style={{ color: 'var(--text)' }}>
+              Why use your own API key?
+            </p>
+            <ul className='mt-2 space-y-1 text-[12px]' style={{ color: 'var(--text-dim)' }}>
+              <li>• Higher rate limits and faster responses</li>
+              <li>• Your conversations stay private</li>
+              <li>• Backup when our server is down</li>
+            </ul>
+            <p className='mt-2 text-[12px]' style={{ color: 'var(--text-dim)' }}>
+              Get your key from{' '}
+              <a
+                href='https://platform.openai.com/api-keys'
+                target='_blank'
+                rel='noopener noreferrer'
+                className='underline hover:no-underline'
+                style={{ color: 'var(--accent-ink)' }}
               >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth={2}
-                  d='M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
-                />
-              </svg>
-              <div className='space-y-2'>
-                <p className={`text-sm ${isDarkMode ? 'text-blue-300' : 'text-blue-700'}`}>
-                  <strong>Why use your own API key?</strong>
-                </p>
-                <ul
-                  className={`text-xs space-y-1 ${isDarkMode ? 'text-blue-200' : 'text-blue-600'}`}
-                >
-                  <li>• Higher rate limits and faster responses</li>
-                  <li>• Your conversations stay private</li>
-                  <li>• Backup when our server is down</li>
-                  <li>• No usage restrictions</li>
-                </ul>
-                <p className={`text-xs ${isDarkMode ? 'text-blue-200' : 'text-blue-600'}`}>
-                  Get your API key from{' '}
-                  <a
-                    href='https://platform.openai.com/api-keys'
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    className='underline hover:no-underline'
-                  >
-                    OpenAI Platform
-                  </a>
-                </p>
-              </div>
-            </div>
+                OpenAI Platform
+              </a>
+            </p>
           </div>
 
           {/* Validation Message */}
           {validationMessage && (
             <div
-              className={`p-3 rounded-xl ${
-                validationMessage.includes('success') || validationMessage.includes('cleared')
-                  ? isDarkMode
-                    ? 'bg-green-900/20 border border-green-500/20'
-                    : 'bg-green-50 border border-green-200'
-                  : isDarkMode
-                    ? 'bg-red-900/20 border border-red-500/20'
-                    : 'bg-red-50 border border-red-200'
-              }`}
+              className='rounded-2xl p-3'
+              style={{
+                background: isPositive ? 'var(--accent-soft)' : 'var(--danger-soft)',
+                border: `1px solid ${isPositive ? 'var(--accent-ring)' : 'var(--danger)'}`,
+              }}
             >
               <p
-                className={`text-sm ${
-                  validationMessage.includes('success') || validationMessage.includes('cleared')
-                    ? isDarkMode
-                      ? 'text-green-300'
-                      : 'text-green-700'
-                    : isDarkMode
-                      ? 'text-red-300'
-                      : 'text-red-700'
-                }`}
+                className='text-sm'
+                style={{ color: isPositive ? 'var(--accent-ink)' : 'var(--danger)' }}
               >
                 {validationMessage}
               </p>
@@ -253,32 +192,21 @@ const SettingsModal: FC<SettingsModalProps> = ({
           )}
 
           {/* Actions */}
-          <div className='flex space-x-3'>
-            <button
-              onClick={handleClear}
-              disabled={isValidating}
-              className={`flex-1 px-4 py-3 rounded-xl font-medium transition-colors ${
-                isDarkMode
-                  ? 'bg-white/10 text-white hover:bg-white/20 disabled:opacity-50'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50'
-              }`}
-            >
+          <div className='flex gap-3'>
+            <button onClick={handleClear} disabled={isValidating} className='btn-soft flex-1'>
               Clear Key
             </button>
             <button
               onClick={handleSave}
               disabled={isValidating}
-              className={`flex-1 px-4 py-3 rounded-xl font-medium transition-colors ${
-                isValidating
-                  ? 'bg-gray-400 text-white cursor-not-allowed'
-                  : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600'
-              }`}
+              className='btn-accent flex-1'
+              style={{ padding: '12px 16px', borderRadius: 'var(--r-md)' }}
             >
               {isValidating ? (
-                <div className='flex items-center justify-center space-x-2'>
-                  <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
-                  <span>Validating...</span>
-                </div>
+                <span className='flex items-center justify-center gap-2'>
+                  <span className='h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent opacity-70' />
+                  Validating…
+                </span>
               ) : (
                 'Save Key'
               )}
