@@ -21,8 +21,6 @@ export const fetchResponse = async (chats: Message[]) => {
   try {
     const message = chats.map(chat => (chat.sender === 'user' ? chat.message : '')).join(' \n');
 
-    console.log('message: ', message);
-
     // Check if user has provided their own API key
     const userApiKey = ApiKeyManager.getApiKey();
 
@@ -34,7 +32,6 @@ export const fetchResponse = async (chats: Message[]) => {
       return await fetchWithServerApi(message);
     }
   } catch (error) {
-    console.log(error);
     if (error instanceof TypeError && error.message.includes('fetch')) {
       throw new Error(
         'Network connection failed. Please check your internet connection and try again.'
@@ -146,6 +143,5 @@ const fetchWithServerApi = async (message: string) => {
   } else if (data.status && data.status !== 200) {
     throw new Error(`Server error (${data.status}). Please try again or use your own API key.`);
   }
-  console.log(data);
   return data;
 };

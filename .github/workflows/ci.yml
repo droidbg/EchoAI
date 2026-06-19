@@ -21,14 +21,18 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
           cache-dependency-path: client/package-lock.json
 
       - name: Install client dependencies
         run: |
           cd client
-          npm ci
+          # Use `npm install` (not `npm ci`): npm ci skips platform-specific
+          # optional deps when the lockfile was generated on another OS
+          # (npm/cli#4828), which drops the @tailwindcss/oxide native binary
+          # the Vite build needs on the Linux runner.
+          npm install
 
       - name: Run ESLint
         run: |
@@ -56,7 +60,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
           cache-dependency-path: server/package-lock.json
 
@@ -83,7 +87,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Install client dependencies
         run: |
@@ -116,7 +120,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Check for outdated dependencies (client)
         run: |
@@ -139,7 +143,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Install dependencies
         run: |

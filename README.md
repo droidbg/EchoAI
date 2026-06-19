@@ -25,7 +25,7 @@
   
   <p align="center">
     <a href="https://nodejs.org/">
-      <img src="https://img.shields.io/badge/Node.js-18+-green?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js">
+      <img src="https://img.shields.io/badge/Node.js-20+-green?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js">
     </a>
     <a href="https://reactjs.org/">
       <img src="https://img.shields.io/badge/React-18.3.1-blue?style=for-the-badge&logo=react&logoColor=white" alt="React">
@@ -201,7 +201,7 @@
 
 | Requirement        | Version  | Download                                                |
 | ------------------ | -------- | ------------------------------------------------------- |
-| **Node.js**        | ≥ 16.0.0 | [Download](https://nodejs.org/)                         |
+| **Node.js**        | ≥ 20.0.0 | [Download](https://nodejs.org/)                         |
 | **npm**            | Latest   | Included with Node.js                                   |
 | **OpenAI API Key** | Any      | [Get Key](https://platform.openai.com/account/api-keys) |
 
@@ -610,7 +610,7 @@ railway up
 
 ```dockerfile
 # Dockerfile for server
-FROM node:20-alpine
+FROM node:24-alpine
 WORKDIR /app
 COPY server/package*.json ./
 RUN npm ci --only=production
