@@ -88,6 +88,8 @@ dist
 # Gatsby files
 .cache/
 public
+# ...but keep EchoAI's committed client static assets (not a Gatsby output)
+!client/public/
 
 # Storybook build outputs
 .out
