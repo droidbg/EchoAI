@@ -28,10 +28,13 @@ jobs:
       - name: Install client dependencies
         run: |
           cd client
-          # Use `npm install` (not `npm ci`): npm ci skips platform-specific
-          # optional deps when the lockfile was generated on another OS
-          # (npm/cli#4828), which drops the @tailwindcss/oxide native binary
-          # the Vite build needs on the Linux runner.
+          # Fresh resolve on the runner instead of `npm ci`/lockfile install.
+          # When a package-lock.json generated on another OS (macOS) is present,
+          # npm trusts its pruned optional-dependency state and won't install the
+          # platform-specific @tailwindcss/oxide native binary the Vite build
+          # needs on Linux (npm/cli#4828). Removing the lockfile forces a full,
+          # platform-correct resolution that installs the Linux binary.
+          rm -f package-lock.json
           npm install
 
       - name: Run ESLint
@@ -92,7 +95,8 @@ jobs:
       - name: Install client dependencies
         run: |
           cd client
-          npm ci
+          rm -f package-lock.json
+          npm install
 
       - name: Install server dependencies
         run: |
@@ -148,7 +152,8 @@ jobs:
       - name: Install dependencies
         run: |
           cd client
-          npm ci
+          rm -f package-lock.json
+          npm install
 
       - name: Check TypeScript compilation
         run: |
