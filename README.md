@@ -3,7 +3,7 @@
   
   # EchoAI
   
-  **A modern, responsive AI chat interface built with React, TypeScript, and OpenAI**
+  **A modern, responsive AI chat workspace built with React, TypeScript, and OpenAI**
   
   <br>
   
@@ -123,22 +123,23 @@
 
 ### 🎯 Current Version: `v1.0.0`
 
-- ✅ **Core Features**: Chat interface, API integration, error handling
-- ✅ **UI/UX**: Dark/light mode, responsive design, animations
-- ✅ **Security**: API key management, input validation
-- ✅ **Performance**: Optimized builds, lazy loading
+- ✅ **Workspace UI**: Sidebar with saved chat history, "New Chat", and an editable profile
+- ✅ **Design**: "Midnight Indigo" dark theme + premium light theme, with a signature animated AI orb
+- ✅ **AI Chat**: OpenAI integration, suggestion grid, retry & error recovery
+- ✅ **Security**: Session-scoped API key storage, input validation
 - 🔄 **Roadmap**: See [Issues](https://github.com/droidbg/EchoAI/issues) for upcoming features
 
 ---
 
 ## 🌟 Features
 
-### 🎨 **Modern User Interface**
+### 🎨 **Modern Workspace Interface**
 
-- **Responsive Design**: Works seamlessly on desktop, tablet, and mobile devices
-- **Dark/Light Mode**: Toggle between beautiful dark and light themes
-- **Glass Morphism**: Modern UI with backdrop blur effects and smooth animations
-- **Accessibility**: Built with accessibility best practices in mind
+- **Sidebar Navigation**: Persistent chat history with rename/delete, a one-click "New Chat", and an editable local profile
+- **"Midnight Indigo" Theme**: A premium dark-first design with a polished light variant, toggleable anytime
+- **Signature AI Orb**: A pure-CSS glass-marble orb used as the brand mark, hero and thinking indicator
+- **Responsive Design**: Fixed sidebar on desktop, slide-in drawer on mobile — works across all devices
+- **Accessibility**: Keyboard-navigable, clear focus styles, and `prefers-reduced-motion` support
 
 ### 🤖 **AI-Powered Conversations**
 
@@ -147,11 +148,17 @@
 - **Context Awareness**: Maintains conversation context throughout the chat
 - **Error Recovery**: Intelligent retry mechanisms with fallback options
 
+### 💬 **Saved Conversations**
+
+- **Multiple Chats**: Start as many conversations as you like and switch between them instantly
+- **Persistent History**: Conversations are saved in your browser and survive reloads
+- **Auto-Titles**: Each chat is named from your first message — rename or delete anytime
+
 ### 🔐 **Flexible API Key Management**
 
 - **User API Keys**: Use your own OpenAI API key for personal use
 - **Server Fallback**: Built-in server with default API key for easy setup
-- **Secure Storage**: API keys stored securely in browser local storage
+- **Session Storage**: Your API key is kept only for the current browser session and never sent to our servers
 - **Key Validation**: Real-time API key testing and validation
 
 ### ⚡ **Performance & Reliability**
@@ -429,20 +436,25 @@ Access settings by clicking the gear icon:
 ```
 client/
 ├── src/
-│   ├── components/          # React components
-│   │   ├── AiChat.tsx      # AI message display
-│   │   ├── ChatBody.tsx    # Main chat container
-│   │   ├── ChatInput.tsx   # Message input
-│   │   ├── SettingsModal.tsx # Settings interface
-│   │   ├── TypingIndicator.tsx # Loading animation
-│   │   └── UserChat.tsx    # User message display
-│   ├── utils/              # Utility functions
-│   │   ├── Api.ts          # API communication
-│   │   └── ApiKeyManager.ts # API key management
-│   ├── App.tsx             # Main application
-│   └── main.tsx            # Application entry point
-├── public/                 # Static assets
-└── package.json           # Dependencies and scripts
+│   ├── components/             # React components
+│   │   ├── Sidebar.tsx         # Workspace nav: history, new chat, profile
+│   │   ├── Header.tsx          # Top bar: status, settings, theme toggle
+│   │   ├── Orb.tsx             # Signature animated AI orb
+│   │   ├── ChatBody.tsx        # Message list + welcome / suggestion grid
+│   │   ├── ChatInput.tsx       # Composer
+│   │   ├── AiChat.tsx          # AI message bubble
+│   │   ├── UserChat.tsx        # User message bubble
+│   │   ├── TypingIndicator.tsx # Thinking animation
+│   │   ├── InlineErrorOptions.tsx # In-bubble retry / use-own-key actions
+│   │   └── SettingsModal.tsx   # API key settings
+│   ├── utils/                  # Utilities & state
+│   │   ├── Api.ts              # API communication
+│   │   ├── ApiKeyManager.ts    # API key management
+│   │   └── useConversations.ts # Reducer-backed chat store (localStorage)
+│   ├── App.tsx                 # Workspace shell & orchestration
+│   └── main.tsx                # Application entry point
+├── public/                     # Static assets
+└── package.json                # Dependencies and scripts
 ```
 
 ### Backend (Node.js + Express)
@@ -459,12 +471,14 @@ server/
 
 #### Frontend
 
-- **React 18** - Modern React with hooks and concurrent features
+- **React 18** - Modern React with hooks, `useReducer` state and concurrent features
 - **TypeScript** - Type-safe JavaScript development
 - **Vite** - Fast build tool and development server
-- **Tailwind CSS** - Utility-first CSS framework
-- **React Query** - Data fetching and state management
-- **Auto Animate** - Smooth animations
+- **Tailwind CSS 4** - Utility-first styling layered over a custom design-token system
+- **Fraunces + Plus Jakarta Sans** - Distinctive serif/sans type pairing
+- **React Query** - Data fetching for chat requests
+- **Auto Animate** - Smooth list animations
+- **localStorage** - Client-side persistence for saved conversations
 
 #### Backend
 
