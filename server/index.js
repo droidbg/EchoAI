@@ -79,7 +79,7 @@ app.get("/", (req, res) => {
   res.json({
     status: "healthy",
     service: "EchoAI Server",
-    version: "1.0.0",
+    version: "2.0.0",
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development'
   });

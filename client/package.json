@@ -1,7 +1,7 @@
 {
   "name": "echoai",
   "private": true,
-  "version": "1.0.0",
+  "version": "2.0.0",
   "type": "module",
   "description": "EchoAI - A modern, responsive AI chat interface built with React, TypeScript, and Google Gemini",
   "keywords": [

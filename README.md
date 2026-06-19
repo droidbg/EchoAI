@@ -121,7 +121,7 @@
 
 </div>
 
-### 🎯 Current Version: `v1.0.0`
+### 🎯 Current Version: `v2.0.0`
 
 - ✅ **Workspace UI**: Sidebar with saved chat history, "New Chat", and an editable profile
 - ✅ **Design**: "Midnight Indigo" dark theme + premium light theme, with a signature animated AI orb
@@ -508,7 +508,7 @@ GET /
 {
   "status": "healthy",
   "service": "EchoAI Server",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "timestamp": "2024-12-19T10:30:00.000Z",
   "environment": "development"
 }
