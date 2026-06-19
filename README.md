@@ -215,11 +215,13 @@
 ### ⚡ One-Command Setup
 
 ```bash
-# Clone, install, and start EchoAI
-git clone https://github.com/droidbg/EchoAI.git && cd EchoAI && npm run setup
+# Clone, then let EchoAI install deps, configure env vars, and start both apps
+git clone https://github.com/droidbg/EchoAI.git && cd EchoAI && npm run dev
 ```
 
-> **Note**: The `npm run setup` script will be added to automate the entire setup process.
+> `npm run dev` is **end-to-end**: it installs the client & server dependencies (first run only),
+> sets safe defaults like `VITE_SERVER_URL`, interactively asks for your `GEMINI_API_KEY`
+> (with steps to get one), then starts the client and server together.
 
 ### 1. Clone the Repository
 
