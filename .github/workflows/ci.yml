@@ -28,12 +28,14 @@ jobs:
       - name: Install client dependencies
         run: |
           cd client
-          # Fresh resolve on the runner instead of `npm ci`/lockfile install.
-          # When a package-lock.json generated on another OS (macOS) is present,
-          # npm trusts its pruned optional-dependency state and won't install the
-          # platform-specific @tailwindcss/oxide native binary the Vite build
-          # needs on Linux (npm/cli#4828). Removing the lockfile forces a full,
-          # platform-correct resolution that installs the Linux binary.
+          # Fresh, platform-correct resolve on the Linux runner. When a
+          # package-lock.json generated on another OS (macOS) is present, npm
+          # trusts its pruned optional-dependency tree and skips the Linux
+          # native binaries the build needs — e.g. @rollup/rollup-linux-x64-gnu
+          # and @tailwindcss/oxide-linux-x64-gnu (npm/cli#4828). Removing the
+          # lockfile forces a full resolution that installs the Linux binaries.
+          # (The root "workspaces" field was removed so this stays scoped to
+          # client/ and no longer hoists to the repo-root node_modules.)
           rm -f package-lock.json
           npm install
 

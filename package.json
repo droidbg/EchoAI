@@ -3,10 +3,6 @@
   "version": "1.0.0",
   "description": "EchoAI - A modern, responsive AI chat interface built with React, TypeScript, and OpenAI",
   "private": true,
-  "workspaces": [
-    "client",
-    "server"
-  ],
   "scripts": {
     "setup": "npm run install:all && npm run setup:env",
     "install:all": "npm install && npm run install:client && npm run install:server",
